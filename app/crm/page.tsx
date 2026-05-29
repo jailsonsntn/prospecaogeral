@@ -138,7 +138,7 @@ export default function CrmPage() {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Buscar por CNPJ, razao social, fantasia ou cidade"
+            placeholder="Buscar por CNPJ, razão social, nome fantasia ou cidade"
             className="panel-input"
           />
         </div>
@@ -151,18 +151,18 @@ export default function CrmPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-200 text-sm">
+            <table className="min-w-[1480px] divide-y divide-slate-200 text-sm">
               <thead className="bg-slate-50">
                 <tr>
-                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">CNPJ</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Empresa</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Contato</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Status</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Prioridade</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Canal</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Proximo contato</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Observacoes</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Acao</th>
+                  <th className="w-[170px] px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">CNPJ</th>
+                  <th className="w-[320px] px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Empresa</th>
+                  <th className="w-[210px] px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Contato</th>
+                  <th className="w-[150px] px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Status</th>
+                  <th className="w-[150px] px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Prioridade</th>
+                  <th className="w-[160px] px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Canal</th>
+                  <th className="w-[180px] px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Próximo contato</th>
+                  <th className="w-[280px] px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Observações</th>
+                  <th className="w-[120px] px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Ação</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 bg-white">
@@ -170,13 +170,23 @@ export default function CrmPage() {
                   <tr key={lead.cnpj} className="align-top hover:bg-slate-50">
                     <td className="whitespace-nowrap px-3 py-2 font-mono font-semibold text-teal-700">{maskCnpj(lead.cnpj)}</td>
                     <td className="px-3 py-2">
-                      <p className="font-semibold text-slate-900">{lead.razaoSocial || "-"}</p>
-                      <p className="text-xs text-slate-500">{lead.nomeFantasia || "-"}</p>
-                      <p className="text-xs text-slate-500">{lead.municipio || "-"} / {lead.uf || "-"}</p>
+                      <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-3 shadow-sm">
+                        <p className="line-clamp-2 font-semibold leading-tight text-slate-900">
+                          {lead.razaoSocial || "-"}
+                        </p>
+                        <p className="mt-1 line-clamp-2 text-xs font-medium text-slate-500">
+                          {lead.nomeFantasia || "-"}
+                        </p>
+                        <p className="mt-1 text-xs text-slate-500">
+                          {lead.municipio || "-"} / {lead.uf || "-"}
+                        </p>
+                      </div>
                     </td>
                     <td className="px-3 py-2 text-slate-700">
-                      <p>{lead.email || "-"}</p>
-                      <p>{lead.telefone || "-"}</p>
+                      <div className="space-y-1">
+                        <p className="break-words">{lead.email || "-"}</p>
+                        <p className="font-medium text-slate-900">{lead.telefone || "-"}</p>
+                      </div>
                     </td>
                     <td className="px-3 py-2">
                       <select
@@ -239,7 +249,7 @@ export default function CrmPage() {
                           setLeads(await fetchLeads());
                         }}
                         rows={3}
-                        placeholder="Proximo passo, abordagem, retorno..."
+                        placeholder="Próximo passo, abordagem, retorno..."
                         className="panel-input min-w-[220px]"
                       />
                     </td>
