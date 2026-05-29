@@ -13,7 +13,7 @@ import {
   maskCnpj,
   serializeValue,
 } from "@/lib/cnpj";
-import { getLeadKeyFromRow, getLeads, getLeadsEventName, removeLead, upsertLeadFromRow } from "@/lib/leads";
+import { fetchLeads, getLeadKeyFromRow, getLeadsEventName, removeLead, upsertLeadFromRow } from "@/lib/leads";
 
 interface Props {
   rows: CnpjData[];
@@ -26,8 +26,8 @@ export default function ResultsTable({ rows, filename = "cnpj.csv" }: Props) {
   const [showJson, setShowJson] = useState(false);
   const [leadKeys, setLeadKeys] = useState<Set<string>>(new Set());
 
-  function reloadLeadKeys() {
-    const keys = new Set(getLeads().map((lead) => lead.cnpj));
+  async function reloadLeadKeys() {
+    const keys = new Set((await fetchLeads()).map((lead) => lead.cnpj));
     setLeadKeys(keys);
   }
 
@@ -39,7 +39,7 @@ export default function ResultsTable({ rows, filename = "cnpj.csv" }: Props) {
     }
 
     const leadsEvent = getLeadsEventName();
-    reloadLeadKeys();
+    void reloadLeadKeys();
 
     window.addEventListener("keydown", onEscape);
     window.addEventListener(leadsEvent, reloadLeadKeys);
@@ -310,15 +310,15 @@ export default function ResultsTable({ rows, filename = "cnpj.csv" }: Props) {
             <div className="mt-4 flex flex-wrap gap-3">
               <button
                 type="button"
-                onClick={() => {
+                onClick={async () => {
                   if (!selectedRow) return;
                   const key = getLeadKeyFromRow(selectedRow);
                   if (leadKeys.has(key)) {
-                    removeLead(key);
+                    await removeLead(key);
                   } else {
-                    upsertLeadFromRow(selectedRow);
+                    await upsertLeadFromRow(selectedRow);
                   }
-                  reloadLeadKeys();
+                  await reloadLeadKeys();
                 }}
                 className="rounded-lg bg-amber-500 px-3 py-1.5 text-sm font-semibold text-white hover:bg-amber-600"
               >

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import AuthGuard from "@/components/AuthGuard";
 import { maskCnpj } from "@/lib/cnpj";
-import { LeadChannel, LeadItem, LeadPriority, LeadStatus, getLeads, getLeadsEventName, removeLead, updateLead } from "@/lib/leads";
+import { LeadChannel, LeadItem, LeadPriority, LeadStatus, fetchLeads, getLeadsEventName, removeLead, updateLead } from "@/lib/leads";
 
 const STATUS_OPTIONS: LeadStatus[] = ["novo", "contato", "qualificado", "proposta", "fechado", "perdido"];
 const CHANNEL_OPTIONS: LeadChannel[] = ["email", "whatsapp", "telefone", "outro"];
@@ -47,14 +47,21 @@ export default function CrmPage() {
   const [query, setQuery] = useState("");
 
   useEffect(() => {
-    const reload = () => setLeads(getLeads());
-    reload();
+    let active = true;
+
+    const reload = async () => {
+      const next = await fetchLeads();
+      if (active) setLeads(next);
+    };
+
+    void reload();
 
     const eventName = getLeadsEventName();
     window.addEventListener(eventName, reload);
     window.addEventListener("storage", reload);
 
     return () => {
+      active = false;
       window.removeEventListener(eventName, reload);
       window.removeEventListener("storage", reload);
     };
@@ -174,9 +181,9 @@ export default function CrmPage() {
                     <td className="px-3 py-2">
                       <select
                         value={lead.status}
-                        onChange={(e) => {
-                          updateLead(lead.cnpj, { status: e.target.value as LeadStatus });
-                          setLeads(getLeads());
+                        onChange={async (e) => {
+                          await updateLead(lead.cnpj, { status: e.target.value as LeadStatus });
+                          setLeads(await fetchLeads());
                         }}
                         className="panel-input min-w-[130px]"
                       >
@@ -188,9 +195,9 @@ export default function CrmPage() {
                     <td className="px-3 py-2">
                       <select
                         value={lead.prioridade}
-                        onChange={(e) => {
-                          updateLead(lead.cnpj, { prioridade: e.target.value as LeadPriority });
-                          setLeads(getLeads());
+                        onChange={async (e) => {
+                          await updateLead(lead.cnpj, { prioridade: e.target.value as LeadPriority });
+                          setLeads(await fetchLeads());
                         }}
                         className="panel-input min-w-[120px]"
                       >
@@ -202,9 +209,9 @@ export default function CrmPage() {
                     <td className="px-3 py-2">
                       <select
                         value={lead.canalPreferencial}
-                        onChange={(e) => {
-                          updateLead(lead.cnpj, { canalPreferencial: e.target.value as LeadChannel });
-                          setLeads(getLeads());
+                        onChange={async (e) => {
+                          await updateLead(lead.cnpj, { canalPreferencial: e.target.value as LeadChannel });
+                          setLeads(await fetchLeads());
                         }}
                         className="panel-input min-w-[130px]"
                       >
@@ -217,9 +224,9 @@ export default function CrmPage() {
                       <input
                         type="date"
                         value={lead.proximoContato}
-                        onChange={(e) => {
-                          updateLead(lead.cnpj, { proximoContato: e.target.value });
-                          setLeads(getLeads());
+                        onChange={async (e) => {
+                          await updateLead(lead.cnpj, { proximoContato: e.target.value });
+                          setLeads(await fetchLeads());
                         }}
                         className="panel-input min-w-[150px]"
                       />
@@ -227,9 +234,9 @@ export default function CrmPage() {
                     <td className="px-3 py-2">
                       <textarea
                         value={lead.observacao}
-                        onChange={(e) => {
-                          updateLead(lead.cnpj, { observacao: e.target.value });
-                          setLeads(getLeads());
+                        onChange={async (e) => {
+                          await updateLead(lead.cnpj, { observacao: e.target.value });
+                          setLeads(await fetchLeads());
                         }}
                         rows={3}
                         placeholder="Proximo passo, abordagem, retorno..."
@@ -239,9 +246,9 @@ export default function CrmPage() {
                     <td className="px-3 py-2">
                       <button
                         type="button"
-                        onClick={() => {
-                          removeLead(lead.cnpj);
-                          setLeads(getLeads());
+                        onClick={async () => {
+                          await removeLead(lead.cnpj);
+                          setLeads(await fetchLeads());
                         }}
                         className="rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-100"
                       >
