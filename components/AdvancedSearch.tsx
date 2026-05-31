@@ -130,8 +130,8 @@ export default function AdvancedSearch() {
   return (
     <div className="space-y-5">
       <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-        <strong>Dica:</strong> combine <strong>UF + CNAE</strong> para respostas mais rapidas da API. Os filtros
-        de <strong>situacao</strong>, <strong>MEI</strong> e <strong>inicio de atividade</strong> sao aplicados
+        <strong>Dica:</strong> combine <strong>UF + CNAE</strong> para respostas mais rápidas da API. Os filtros
+        de <strong>situação</strong>, <strong>MEI</strong> e <strong>início de atividade</strong> são aplicados
         automaticamente nos resultados retornados.
       </div>
 
@@ -180,7 +180,7 @@ export default function AdvancedSearch() {
             <select value={form.mei} onChange={(e) => set("mei", e.target.value)} className={INPUT}>
               <option value="all">Todos</option>
               <option value="sim">Somente MEI</option>
-              <option value="nao">Nao MEI</option>
+              <option value="nao">Não MEI</option>
             </select>
           </div>
 

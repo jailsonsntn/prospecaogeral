@@ -18,7 +18,7 @@ const spaceGrotesk = Space_Grotesk({
 
 export const metadata: Metadata = {
   title: "AllProspect",
-  description: "CRM e prospeccao unificada por CNPJ e mapas",
+  description: "CRM e prospecção unificada por CNPJ e mapas",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

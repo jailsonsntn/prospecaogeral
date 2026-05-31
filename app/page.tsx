@@ -89,10 +89,10 @@ export default function HomeDashboardPage() {
             <div>
               <p className="label-kicker">Dashboard</p>
               <h2 className="font-display mt-2 text-2xl font-semibold text-slate-900 sm:text-3xl">
-                Visao geral do funil
+                Visão geral do funil
               </h2>
               <p className="mt-2 max-w-3xl text-sm text-slate-600 sm:text-base">
-                Acompanhe o pipeline em grafico, veja a entrada por origem e acesse o CRM com um atalho direto.
+                Acompanhe o pipeline em gráfico, veja a entrada por origem e acesse o CRM com um atalho direto.
               </p>
             </div>
 
@@ -110,7 +110,7 @@ export default function HomeDashboardPage() {
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div>
                 <p className="label-kicker">Pipeline</p>
-                <h3 className="font-display mt-1 text-xl font-semibold text-slate-900">Distribuicao dos leads</h3>
+                <h3 className="font-display mt-1 text-xl font-semibold text-slate-900">Distribuição dos leads</h3>
               </div>
               <p className="text-sm text-slate-500">{leads.length} lead(s)</p>
             </div>
@@ -148,7 +148,7 @@ export default function HomeDashboardPage() {
           <div className="grid gap-4">
             <article className="panel-card p-5 sm:p-6">
               <p className="label-kicker">Atalhos</p>
-              <h3 className="font-display mt-1 text-xl font-semibold text-slate-900">Prospeccao rapida</h3>
+              <h3 className="font-display mt-1 text-xl font-semibold text-slate-900">Prospecção rápida</h3>
               <p className="mt-2 text-sm text-slate-600">
                 Acesse os fluxos de captura de leads sem repetir atalho para o CRM.
               </p>

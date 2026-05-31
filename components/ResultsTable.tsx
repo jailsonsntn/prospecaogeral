@@ -36,7 +36,7 @@ export default function ResultsTable({ rows, filename = "cnpj.csv" }: Props) {
   async function toggleLead(row: CnpjData) {
     const key = getLeadKeyFromRow(row);
     if (!key) {
-      setFeedback("Nao foi possivel identificar o CNPJ para marcar lead.");
+      setFeedback("Não foi possível identificar o CNPJ para marcar lead.");
       return;
     }
 
@@ -145,7 +145,7 @@ export default function ResultsTable({ rows, filename = "cnpj.csv" }: Props) {
                 </th>
               ))}
               <th className="whitespace-nowrap px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Acoes
+                Ações
               </th>
             </tr>
           </thead>

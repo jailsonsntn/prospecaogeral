@@ -85,12 +85,12 @@ export default function LoginPage() {
 
           <p className="relative z-10 text-xs font-semibold uppercase tracking-[0.24em] text-cyan-100/80">AllProspect</p>
           <h1 className="font-display relative z-10 mt-3 text-3xl font-semibold leading-tight sm:text-4xl">
-            Prospecao e CRM
+            Prospecção e CRM
             <br />
             no mesmo cockpit
           </h1>
           <p className="relative z-10 mt-4 max-w-md text-sm text-cyan-50/85 sm:text-base">
-            Organize funil, capture leads por CNPJ e Google Maps, e acelere a operacao com IA em um fluxo unico.
+            Organize funil, capture leads por CNPJ e Google Maps, e acelere a operação com IA em um fluxo único.
           </p>
 
           <div className="relative z-10 mt-7 grid gap-3 sm:grid-cols-2">
@@ -99,8 +99,8 @@ export default function LoginPage() {
               <p className="mt-1 text-lg font-semibold">Kanban operacional</p>
             </div>
             <div className="rounded-2xl border border-white/20 bg-white/10 p-3 backdrop-blur">
-              <p className="text-[11px] uppercase tracking-[0.16em] text-cyan-100/75">Inteligencia</p>
-              <p className="mt-1 text-lg font-semibold">Insights e acao</p>
+              <p className="text-[11px] uppercase tracking-[0.16em] text-cyan-100/75">Inteligência</p>
+              <p className="mt-1 text-lg font-semibold">Insights e ação</p>
             </div>
           </div>
         </article>
@@ -112,7 +112,7 @@ export default function LoginPage() {
 
           {!hasConfig ? (
             <div className="mt-5 rounded-xl border border-red-200 bg-red-50/95 p-3 text-sm text-red-700">
-              Configure NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY para habilitar a autenticacao.
+              Configure NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY para habilitar a autenticação.
             </div>
           ) : (
             <form

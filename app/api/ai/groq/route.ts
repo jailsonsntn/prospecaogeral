@@ -5,7 +5,7 @@ type GroqMode = "resumo" | "resposta" | "tarefa" | "prioridade";
 export async function POST(req: NextRequest) {
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
-    return NextResponse.json({ error: "GROQ_API_KEY nao configurada no servidor." }, { status: 500 });
+    return NextResponse.json({ error: "GROQ_API_KEY não configurada no servidor." }, { status: 500 });
   }
 
   let body: {
@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Body JSON invalido." }, { status: 400 });
+    return NextResponse.json({ error: "Body JSON inválido." }, { status: 400 });
   }
 
   const mode = body.mode || "resumo";
@@ -25,13 +25,13 @@ export async function POST(req: NextRequest) {
   const leadId = body.leadId || null;
 
   const systemPrompt =
-    "Voce e um assistente de CRM B2B em portugues do Brasil. Gere resposta objetiva, pratica e acionavel.";
+    "Você é um assistente de CRM B2B em português do Brasil. Gere resposta objetiva, prática e acionável.";
 
   const modePrompt: Record<GroqMode, string> = {
     resumo: "Gere um resumo comercial curto deste lead, com potencial e risco.",
     resposta: "Gere uma mensagem inicial de abordagem comercial curta e personalizada.",
-    tarefa: "Sugira as proximas 3 tarefas de follow-up com prioridade e prazo sugerido.",
-    prioridade: "Classifique prioridade em baixa, media ou alta com justificativa curta.",
+    tarefa: "Sugira as próximas 3 tarefas de follow-up com prioridade e prazo sugerido.",
+    prioridade: "Classifique prioridade em baixa, média ou alta com justificativa curta.",
   };
 
   try {

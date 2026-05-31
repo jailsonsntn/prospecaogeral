@@ -30,11 +30,11 @@ export default function LogoutClient({ reason }: Props) {
         </div>
 
         <p className="label-kicker relative z-10 mt-4">Logout</p>
-        <h2 className="font-display relative z-10 mt-2 text-3xl font-semibold text-slate-900">Sessao encerrada</h2>
+        <h2 className="font-display relative z-10 mt-2 text-3xl font-semibold text-slate-900">Sessão encerrada</h2>
         <p className="relative z-10 mx-auto mt-3 max-w-md text-sm text-slate-600 sm:text-base">
           {timedOut
-            ? "Sua sessao expirou por inatividade de 1 hora. Entre novamente para continuar a operacao."
-            : "Voce saiu da plataforma com sucesso. Quando quiser, e so entrar novamente."}
+            ? "Sua sessão expirou por inatividade de 1 hora. Entre novamente para continuar a operação."
+            : "Você saiu da plataforma com sucesso. Quando quiser, é só entrar novamente."}
         </p>
 
         <div className="relative z-10 mt-6 flex justify-center">

@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
   const apiKey = process.env.GOOGLE_MAPS_API_KEY;
   if (!apiKey) {
     return NextResponse.json(
-      { error: "GOOGLE_MAPS_API_KEY nao configurada no servidor." },
+      { error: "GOOGLE_MAPS_API_KEY não configurada no servidor." },
       { status: 500 }
     );
   }
@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Body JSON invalido." }, { status: 400 });
+    return NextResponse.json({ error: "Body JSON inválido." }, { status: 400 });
   }
 
   const query = String(body.query || "").trim();

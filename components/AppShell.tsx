@@ -14,8 +14,8 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/", label: "Dashboard", short: "Home" },
   { href: "/crm", label: "CRM", short: "CRM" },
   { href: "/ai", label: "AI", short: "AI" },
-  { href: "/prospeccao-cnpj", label: "Prospeccao CNPJ", short: "CNPJ" },
-  { href: "/prospeccao-mapa", label: "Prospeccao Mapa", short: "Mapa" },
+  { href: "/prospeccao-cnpj", label: "Prospecção CNPJ", short: "CNPJ" },
+  { href: "/prospeccao-mapa", label: "Prospecção Mapa", short: "Mapa" },
 ];
 
 function Icon({ name }: { name: "home" | "crm" | "ai" | "cnpj" | "map" | "config" | "menu" | "bell" | "user" | "logout" | "login" }) {
@@ -146,7 +146,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
         <div>
           <p className="label-kicker">Plataforma CRM</p>
           <h1 className="font-display mt-2 text-2xl font-semibold text-slate-900">AllProspect</h1>
-          <p className="mt-2 text-sm text-slate-600">Funil comercial com prospeccao CNPJ e Google Maps.</p>
+          <p className="mt-2 text-sm text-slate-600">Funil comercial com prospecção CNPJ e Google Maps.</p>
         </div>
 
         <nav className="mt-8 space-y-2">
@@ -184,7 +184,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
               </div>
               <div className="p-2">
                 <Link href="/configuracoes" className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
-                  <Icon name="config" /> Configuracoes
+                  <Icon name="config" /> Configurações
                 </Link>
                 <Link href="/login" className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
                   <Icon name="login" /> Login

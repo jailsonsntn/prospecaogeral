@@ -46,7 +46,7 @@ function channelLabel(channel: LeadChannel): string {
 function priorityLabel(priority: LeadPriority): string {
   const map: Record<LeadPriority, string> = {
     baixa: "Baixa",
-    media: "Media",
+    media: "Média",
     alta: "Alta",
   };
   return map[priority];
@@ -241,7 +241,7 @@ export default function CrmPage() {
       <section className="space-y-3">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-            <span>Filtros e visualizacao</span>
+            <span>Filtros e visualização</span>
             {activeFiltersCount > 0 && (
               <span className="rounded-full bg-teal-50 px-2 py-0.5 text-[11px] font-semibold normal-case tracking-normal text-teal-800">
                 {activeFiltersCount} ativo(s)
@@ -320,7 +320,7 @@ export default function CrmPage() {
             </div>
 
             <div className="mt-3 flex flex-wrap items-center gap-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Visualizacao</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Visualização</p>
               <button
                 type="button"
                 onClick={() => setViewMode("lista")}
@@ -349,7 +349,7 @@ export default function CrmPage() {
               <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                    Colunas visiveis no kanban
+                    Colunas visíveis no kanban
                   </p>
                   <div className="flex flex-wrap gap-2">
                     <button

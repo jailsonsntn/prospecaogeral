@@ -80,10 +80,10 @@ export default function SessionTimeoutManager() {
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/55 p-4">
       <div className="panel-card w-full max-w-md p-5">
-        <p className="label-kicker">Sessao</p>
-        <h3 className="font-display mt-1 text-xl font-semibold text-slate-900">Sua sessao vai expirar</h3>
+        <p className="label-kicker">Sessão</p>
+        <h3 className="font-display mt-1 text-xl font-semibold text-slate-900">Sua sessão vai expirar</h3>
         <p className="mt-2 text-sm text-slate-600">
-          Sem resposta, o logout sera feito automaticamente em {remainingSeconds}s.
+          Sem resposta, o logout será feito automaticamente em {remainingSeconds}s.
         </p>
 
         <div className="mt-4 flex flex-wrap gap-3">

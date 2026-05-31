@@ -4,7 +4,7 @@ export async function GET(req: NextRequest) {
   const apiKey = process.env.GOOGLE_MAPS_API_KEY;
   if (!apiKey) {
     return NextResponse.json(
-      { error: "GOOGLE_MAPS_API_KEY nao configurada no servidor." },
+      { error: "GOOGLE_MAPS_API_KEY não configurada no servidor." },
       { status: 500 }
     );
   }
@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
   const address = String(req.nextUrl.searchParams.get("address") || "").trim();
   if (!address) {
     return NextResponse.json(
-      { error: "Informe o endereco para geocodificacao." },
+      { error: "Informe o endereço para geocodificação." },
       { status: 400 }
     );
   }
@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
     const resp = await fetch(url.toString(), { cache: "no-store" });
     if (!resp.ok) {
       return NextResponse.json(
-        { error: "Falha ao geocodificar endereco." },
+        { error: "Falha ao geocodificar endereço." },
         { status: 502 }
       );
     }
@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
 
     if (typeof lat !== "number" || typeof lng !== "number") {
       return NextResponse.json(
-        { error: "Endereco nao encontrado." },
+        { error: "Endereço não encontrado." },
         { status: 404 }
       );
     }
@@ -58,7 +58,7 @@ export async function GET(req: NextRequest) {
     );
   } catch {
     return NextResponse.json(
-      { error: "Erro ao conectar com a API de geocodificacao." },
+      { error: "Erro ao conectar com a API de geocodificação." },
       { status: 502 }
     );
   }

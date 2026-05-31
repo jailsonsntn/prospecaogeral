@@ -192,7 +192,7 @@ function AiPageContent() {
             <div>
               <p className="label-kicker">AI Workspace</p>
               <h2 className="font-display mt-1 text-2xl font-semibold text-slate-900">Tarefas, insights e copys</h2>
-              <p className="mt-2 text-sm text-slate-600">Central para tratar funil, textos e operacao assistida por IA.</p>
+              <p className="mt-2 text-sm text-slate-600">Central para tratar funil, textos e operação assistida por IA.</p>
             </div>
             <div className="space-y-2">
               <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">Lead ativo</label>
@@ -224,7 +224,7 @@ function AiPageContent() {
                   : "border-slate-300 bg-white text-slate-700"
               }`}
             >
-              Operacao
+              Operação
             </button>
             <button
               type="button"
@@ -235,7 +235,7 @@ function AiPageContent() {
                   : "border-slate-300 bg-white text-slate-700"
               }`}
             >
-              Conteudo
+              Conteúdo
             </button>
           </div>
         </section>
@@ -304,7 +304,7 @@ function AiPageContent() {
 
               <article className="panel-card p-4">
                 <p className="label-kicker">Tarefas</p>
-                <input value={newTaskTitle} onChange={(e) => setNewTaskTitle(e.target.value)} className="panel-input mt-2" placeholder="Titulo da tarefa" />
+                <input value={newTaskTitle} onChange={(e) => setNewTaskTitle(e.target.value)} className="panel-input mt-2" placeholder="Título da tarefa" />
                 <input type="date" value={newTaskDueAt} onChange={(e) => setNewTaskDueAt(e.target.value)} className="panel-input mt-2" />
                 <button
                   type="button"
@@ -340,8 +340,8 @@ function AiPageContent() {
 
             <div className="space-y-4">
               <article className="panel-card p-4">
-                <p className="label-kicker">Observacoes</p>
-                <textarea value={newNote} onChange={(e) => setNewNote(e.target.value)} rows={3} className="panel-input mt-2" placeholder="Nova anotacao" />
+                <p className="label-kicker">Observações</p>
+                <textarea value={newNote} onChange={(e) => setNewNote(e.target.value)} rows={3} className="panel-input mt-2" placeholder="Nova anotação" />
                 <button
                   type="button"
                   onClick={async () => {
@@ -372,7 +372,7 @@ function AiPageContent() {
             <div className="space-y-4">
               <article className="panel-card p-4">
                 <p className="label-kicker">Funil</p>
-                <p className="mt-1 text-sm text-slate-600">Conversao geral: <span className="font-semibold text-slate-900">{conversion}</span></p>
+                <p className="mt-1 text-sm text-slate-600">Conversão geral: <span className="font-semibold text-slate-900">{conversion}</span></p>
                 <div className="mt-3 grid grid-cols-2 gap-2">
                   {STATUS_OPTIONS.map((status) => (
                     <div key={status} className="rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5">
@@ -396,7 +396,7 @@ function AiPageContent() {
                   onChange={(e) => setAiOutput(e.target.value)}
                   rows={6}
                   className="panel-input mt-2"
-                  placeholder="Saida da IA"
+                  placeholder="Saída da IA"
                 />
                 <button
                   type="button"
@@ -405,7 +405,7 @@ function AiPageContent() {
                     const next = `${selectedLead.observacao}\n\n[IA]\n${aiOutput}`.trim();
                     await upsertLeadByCurrentData({ ...selectedLead, observacao: next });
                     await reloadLeadsOnly();
-                    setMessage("Saida da IA adicionada em observacoes.");
+                    setMessage("Saída da IA adicionada em observações.");
                   }}
                   className="mt-2 rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-600"
                 >
@@ -417,9 +417,9 @@ function AiPageContent() {
             <div className="space-y-4">
               <article className="panel-card p-4">
                 <p className="label-kicker">Textos e copys</p>
-                <input value={tplTitle} onChange={(e) => setTplTitle(e.target.value)} className="panel-input mt-2" placeholder="Titulo do template" />
+                <input value={tplTitle} onChange={(e) => setTplTitle(e.target.value)} className="panel-input mt-2" placeholder="Título do template" />
                 <input value={tplChannel} onChange={(e) => setTplChannel(e.target.value)} className="panel-input mt-2" placeholder="Canal (whatsapp, email...)" />
-                <textarea value={tplContent} onChange={(e) => setTplContent(e.target.value)} rows={3} className="panel-input mt-2" placeholder="Conteudo do template" />
+                <textarea value={tplContent} onChange={(e) => setTplContent(e.target.value)} rows={3} className="panel-input mt-2" placeholder="Conteúdo do template" />
                 <button
                   type="button"
                   onClick={async () => {
@@ -442,7 +442,7 @@ function AiPageContent() {
                     const next = `${selectedLead.observacao}\n\n${selectedTemplate.content}`.trim();
                     await upsertLeadByCurrentData({ ...selectedLead, observacao: next });
                     await reloadLeadsOnly();
-                    setMessage("Template aplicado em observacoes do lead.");
+                    setMessage("Template aplicado em observações do lead.");
                   }}
                   className="panel-input mt-2"
                 >

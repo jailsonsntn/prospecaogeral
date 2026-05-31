@@ -47,7 +47,7 @@ export default function SingleCnpj() {
     try {
       const key = getLeadKeyFromRow(data);
       if (!key) {
-        setLeadMessage("Nao foi possivel identificar o CNPJ para marcar lead.");
+        setLeadMessage("Não foi possível identificar o CNPJ para marcar lead.");
         return;
       }
 

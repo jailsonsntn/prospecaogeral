@@ -93,22 +93,22 @@ export default function ConfiguracoesPage() {
         });
 
         if (resp.ok) {
-          setMessage("Configuracoes salvas no Supabase.");
+          setMessage("Configurações salvas no Supabase.");
           return;
         }
       }
     }
 
-    setMessage("Configuracoes salvas localmente.");
+    setMessage("Configurações salvas localmente.");
   }
 
   return (
     <AuthGuard>
       <section className="dashboard-shell panel-fade-up mx-auto w-full max-w-3xl p-5 sm:p-7">
-        <p className="label-kicker">Configuracoes</p>
+        <p className="label-kicker">Configurações</p>
         <h2 className="font-display mt-2 text-2xl font-semibold text-slate-900 sm:text-3xl">Dados do seu cadastro</h2>
         <p className="mt-2 text-sm text-slate-600">
-          Preencha os dados principais do seu perfil operacional para uso no CRM e nos fluxos de prospeccao.
+          Preencha os dados principais do seu perfil operacional para uso no CRM e nos fluxos de prospecção.
         </p>
 
         <form onSubmit={onSubmit} className="mt-5 grid gap-3 sm:grid-cols-2">
@@ -158,7 +158,7 @@ export default function ConfiguracoesPage() {
               type="submit"
               className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700"
             >
-              Salvar configuracoes
+              Salvar configurações
             </button>
           </div>
         </form>
@@ -168,7 +168,7 @@ export default function ConfiguracoesPage() {
         <section className="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4">
           <p className="label-kicker">Fonte de dados</p>
           <p className="mt-2 text-sm text-slate-600">
-            Consultas de CNPJ utilizam dados publicos da Receita Federal via Minha Receita.
+            Consultas de CNPJ utilizam dados públicos da Receita Federal via Minha Receita.
           </p>
           <a
             href="https://minhareceita.org"

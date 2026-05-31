@@ -143,7 +143,7 @@ export default function ProspeccaoMapaPage() {
   async function getCurrentPosition(): Promise<{ lat: number; lng: number }> {
     return new Promise((resolve, reject) => {
       if (!navigator.geolocation) {
-        reject(new Error("Geolocalizacao nao suportada neste navegador."));
+        reject(new Error("Geolocalização não suportada neste navegador."));
         return;
       }
 
@@ -154,7 +154,7 @@ export default function ProspeccaoMapaPage() {
             lng: position.coords.longitude,
           });
         },
-        () => reject(new Error("Nao foi possivel obter sua localizacao atual.")),
+        () => reject(new Error("Não foi possível obter sua localização atual.")),
         { enableHighAccuracy: true, timeout: 10000 }
       );
     });
@@ -198,7 +198,7 @@ export default function ProspeccaoMapaPage() {
         const geoData = await geoResp.json();
         if (!geoResp.ok) {
           setResults([]);
-          setError(geoData.error || "Nao foi possivel geocodificar o local informado.");
+          setError(geoData.error || "Não foi possível geocodificar o local informado.");
           return;
         }
 
@@ -250,7 +250,7 @@ export default function ProspeccaoMapaPage() {
       setMessage(`${aggregate.length} empresa(s) encontrada(s).`);
     } catch (err) {
       setResults([]);
-      setError(err instanceof Error ? err.message : "Falha de conexao durante a busca.");
+      setError(err instanceof Error ? err.message : "Falha de conexão durante a busca.");
     } finally {
       setLoading(false);
     }
@@ -260,9 +260,9 @@ export default function ProspeccaoMapaPage() {
     <AuthGuard>
       <div className="space-y-5">
         <section className="dashboard-shell panel-fade-up p-5 sm:p-7">
-          <p className="label-kicker">Prospeccao Mapa</p>
+          <p className="label-kicker">Prospecção Mapa</p>
           <h2 className="font-display mt-2 text-2xl font-semibold text-slate-900 sm:text-3xl">
-            Captacao por Google Maps
+            Captação por Google Maps
           </h2>
           <p className="mt-2 max-w-3xl text-sm text-slate-600 sm:text-base">
             Pesquise empresas por segmento e localidade. Cada resultado pode ser enviado ao CRM imediatamente.
@@ -293,7 +293,7 @@ export default function ProspeccaoMapaPage() {
             </button>
           </div>
           <p className="mt-2 text-xs text-slate-500">
-            Busca por raio: usa um ponto central e distancia maxima. Busca por cidade/bairro/local: pesquisa por regiao textual.
+            Busca por raio: usa um ponto central e distância máxima. Busca por cidade/bairro/local: pesquisa por região textual.
           </p>
 
           <div className="mt-5 grid gap-3 md:grid-cols-[1.3fr,0.7fr]">
@@ -303,13 +303,13 @@ export default function ProspeccaoMapaPage() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 className="panel-input"
-                placeholder="Ex.: restaurante, clinica odontologica, mercado"
+                placeholder="Ex.: restaurante, clínica odontológica, mercado"
               />
-              <p className="mt-1 text-xs text-slate-500">Define o tipo de empresa que voce deseja encontrar.</p>
+              <p className="mt-1 text-xs text-slate-500">Define o tipo de empresa que você deseja encontrar.</p>
             </div>
 
             <div>
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Paginas de resultado</label>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Páginas de resultado</label>
               <input
                 type="number"
                 min={1}
@@ -319,14 +319,14 @@ export default function ProspeccaoMapaPage() {
                 className="panel-input"
                 placeholder="1 a 10"
               />
-              <p className="mt-1 text-xs text-slate-500">Cada pagina tenta buscar ate 20 locais. Mais paginas = maior cobertura.</p>
+              <p className="mt-1 text-xs text-slate-500">Cada página tenta buscar até 20 locais. Mais páginas = maior cobertura.</p>
             </div>
           </div>
 
           {searchMode === "radius" ? (
             <div className="mt-4 space-y-3">
               <p className="text-sm font-semibold text-slate-700">Raio da busca: {radiusKm} km</p>
-              <p className="text-xs text-slate-500">Controla a distancia maxima a partir do ponto escolhido.</p>
+              <p className="text-xs text-slate-500">Controla a distância máxima a partir do ponto escolhido.</p>
 
               <div className="grid gap-3 md:grid-cols-[1fr,120px]">
                 <input
@@ -356,7 +356,7 @@ export default function ProspeccaoMapaPage() {
                       : "border-slate-300 bg-white text-slate-700"
                   }`}
                 >
-                  Usar localizacao atual
+                  Usar localização atual
                 </button>
                 <button
                   type="button"
@@ -370,7 +370,7 @@ export default function ProspeccaoMapaPage() {
                   Informar local manual
                 </button>
               </div>
-              <p className="text-xs text-slate-500">Localizacao atual usa GPS do navegador. Local manual usa um endereco/cidade informado por voce.</p>
+              <p className="text-xs text-slate-500">Localização atual usa GPS do navegador. Local manual usa um endereço/cidade informado por você.</p>
 
               {!useCurrentLocation && (
                 <div>
@@ -379,7 +379,7 @@ export default function ProspeccaoMapaPage() {
                     value={locationText}
                     onChange={(e) => setLocationText(e.target.value)}
                     className="panel-input"
-                    placeholder="Cidade, bairro ou regiao"
+                    placeholder="Cidade, bairro ou região"
                   />
                 </div>
               )}
@@ -396,10 +396,10 @@ export default function ProspeccaoMapaPage() {
                   {[
                     "Cidade",
                     "Bairro",
-                    "Regiao",
+                    "Região",
                     "Avenida",
                     "Shopping",
-                    "Ponto turistico",
+                    "Ponto turístico",
                   ].map((opt) => (
                     <option key={opt} value={opt}>{opt}</option>
                   ))}
@@ -511,7 +511,7 @@ export default function ProspeccaoMapaPage() {
                     checked={selectedIds.has(item.id)}
                     onChange={() => toggleSelect(item.id)}
                   />
-                  Selecionar para exportacao
+                  Selecionar para exportação
                 </label>
 
                 <p className="font-display text-lg font-semibold text-slate-900">{item.name}</p>
@@ -530,8 +530,8 @@ export default function ProspeccaoMapaPage() {
                 {expandCards && (
                 <div className="mt-3 space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm">
                   <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Endereco</p>
-                    <p className="text-slate-700">{item.address || "Endereco nao informado"}</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Endereço</p>
+                    <p className="text-slate-700">{item.address || "Endereço não informado"}</p>
                   </div>
 
                   <div>
@@ -551,13 +551,13 @@ export default function ProspeccaoMapaPage() {
                         )}
                       </div>
                     ) : (
-                      <p className="text-slate-500">Nao informado</p>
+                      <p className="text-slate-500">Não informado</p>
                     )}
                   </div>
 
                   <div>
                     <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">E-mail</p>
-                    <p className="text-slate-500">Nao informado pela API do Google Places</p>
+                    <p className="text-slate-500">Não informado pela API do Google Places</p>
                   </div>
 
                   <div>
@@ -567,7 +567,7 @@ export default function ProspeccaoMapaPage() {
                         {toHostLabel(item.website)}
                       </a>
                     ) : (
-                      <p className="text-slate-500">Nao informado</p>
+                      <p className="text-slate-500">Não informado</p>
                     )}
                   </div>
 
@@ -600,7 +600,7 @@ export default function ProspeccaoMapaPage() {
                           {type}
                         </span>
                       ))}
-                      {(!item.types || item.types.length === 0) && <p className="text-slate-500">Nao informada</p>}
+                      {(!item.types || item.types.length === 0) && <p className="text-slate-500">Não informada</p>}
                     </div>
                   </div>
                 </div>
@@ -657,7 +657,7 @@ export default function ProspeccaoMapaPage() {
 
         <section className="panel-card p-4">
           <p className="text-sm text-slate-600">
-            Dica: use a opcao "Adicionar e abrir CRM" para seguir imediatamente com o contato e classificacao do lead.
+            Dica: use a opção "Adicionar e abrir CRM" para seguir imediatamente com o contato e classificação do lead.
           </p>
         </section>
       </div>

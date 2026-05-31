@@ -1,17 +1,17 @@
 # AllProspect
 
-CRM de prospeccao comercial com foco em operacao diaria: captura de leads por CNPJ e Google Maps, funil kanban, enriquecimento e apoio de IA para priorizacao e acao.
+CRM de prospecção comercial com foco em operação diária: captura de leads por CNPJ e Google Maps, funil kanban, enriquecimento e apoio de IA para priorização e ação.
 
-Repositorio oficial:
+Repositório oficial:
 https://github.com/jailsonsntn/prospecaogeral.git
 
-## Visao do produto
+## Visão do produto
 
-- Prospeccao por CNPJ com fluxo de pesquisa unitaria, avancada e em lote.
-- Prospeccao por mapa com Google Places (raio ou local textual) e exportacao CSV.
-- CRM operacional com pipeline em kanban e movimentacao de status.
-- Modulo de IA para resumo, abordagem, tarefas sugeridas e prioridade de lead.
-- Autenticacao com Supabase e controle de sessao com timeout por inatividade.
+- Prospecção por CNPJ com fluxo de pesquisa unitária, avançada e em lote.
+- Prospecção por mapa com Google Places (raio ou local textual) e exportação CSV.
+- CRM operacional com pipeline em kanban e movimentação de status.
+- Módulo de IA para resumo, abordagem, tarefas sugeridas e prioridade de lead.
+- Autenticação com Supabase e controle de sessão com timeout por inatividade.
 
 ## Stack
 
@@ -22,7 +22,7 @@ https://github.com/jailsonsntn/prospecaogeral.git
 - Google Maps Places API + Geocoding API
 - Groq API
 
-## Variaveis de ambiente
+## Variáveis de ambiente
 
 Copie `.env.example` para `.env.local` e preencha:
 
@@ -31,14 +31,14 @@ Copie `.env.example` para `.env.local` e preencha:
 - GOOGLE_MAPS_API_KEY
 - GROQ_API_KEY
 
-Observacao:
+Observação:
 - Nunca comite `.env.local`.
 - Use apenas chave publishable no frontend.
-- Nao use service_role no cliente.
+- Não use service_role no cliente.
 
 ## Rodando localmente
 
-1. Instale dependencias:
+1. Instale dependências:
 
 ```bash
 npm install
@@ -58,7 +58,7 @@ http://localhost:3000
 
 ## Banco de dados (Supabase)
 
-As migracoes SQL estao em `supabase/migrations`.
+As migrações SQL estão em `supabase/migrations`.
 
 Ordem sugerida:
 
@@ -69,7 +69,7 @@ Ordem sugerida:
 
 ## Deploy na Vercel
 
-1. Envie o codigo para o GitHub.
+1. Envie o código para o GitHub.
 2. Na Vercel, clique em Add New Project e importe o repo `jailsonsntn/prospecaogeral`.
 3. Em Project Settings > Environment Variables, cadastre:
    - NEXT_PUBLIC_SUPABASE_URL
@@ -77,16 +77,16 @@ Ordem sugerida:
    - GOOGLE_MAPS_API_KEY
    - GROQ_API_KEY
 4. Build command: `npm run build`
-5. Output: padrao Next.js
+5. Output: padrão Next.js
 6. Deploy.
 
-## Checklist de producao
+## Checklist de produção
 
-- Variaveis de ambiente configuradas na Vercel.
-- Supabase com tabelas, indices e RLS aplicados.
+- Variáveis de ambiente configuradas na Vercel.
+- Supabase com tabelas, índices e RLS aplicados.
 - Chave Google com Places e Geocoding habilitados.
-- Chave Groq valida para o modulo de IA.
-- Fluxos testados: login, CRM, prospeccao CNPJ, prospeccao mapa e logout.
+- Chave Groq válida para o módulo de IA.
+- Fluxos testados: login, CRM, prospecção CNPJ, prospecção mapa e logout.
 
 ## Scripts
 
@@ -97,8 +97,8 @@ npm run build
 npm run start
 ```
 
-## Seguranca e sessao
+## Segurança e sessão
 
-- Headers de seguranca configurados em `next.config.js`.
-- Geolocalizacao permitida apenas no proprio dominio via Permissions-Policy.
-- Timeout automatico de sessao com aviso ao usuario.
+- Headers de segurança configurados em `next.config.js`.
+- Geolocalização permitida apenas no próprio domínio via Permissions-Policy.
+- Timeout automático de sessão com aviso ao usuário.
