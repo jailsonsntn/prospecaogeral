@@ -8,7 +8,6 @@ import {
   hasSupabaseConfig,
   saveSession,
   signInWithEmail,
-  signUpWithEmail,
   validateSession,
 } from "@/lib/supabaseAuth";
 
@@ -33,29 +32,6 @@ export default function LoginPage() {
       }
     });
   }, [router]);
-
-  async function handleSignUp() {
-    if (!email.trim() || !password.trim()) {
-      setMessage("Informe e-mail e senha.");
-      return;
-    }
-
-    setLoading(true);
-    setMessage("");
-    try {
-      const created = await signUpWithEmail(email.trim(), password);
-      if (created) {
-        saveSession(created);
-        router.push("/");
-        return;
-      }
-      setMessage("Conta criada. Verifique seu e-mail para confirmar e depois entre.");
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Falha ao criar conta.");
-    } finally {
-      setLoading(false);
-    }
-  }
 
   async function handleSignIn() {
     if (!email.trim() || !password.trim()) {
@@ -159,14 +135,6 @@ export default function LoginPage() {
                   className="inline-flex items-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700 disabled:opacity-60"
                 >
                   Entrar
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void handleSignUp()}
-                  disabled={loading}
-                  className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
-                >
-                  Criar conta
                 </button>
               </div>
             </form>
