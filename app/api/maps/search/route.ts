@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { ensureApiAuth } from "@/lib/serverApiAuth";
 
 type PlacesApiResponse = {
   places?: Array<{
@@ -14,6 +15,9 @@ type PlacesApiResponse = {
 };
 
 export async function POST(req: NextRequest) {
+  const authError = await ensureApiAuth(req);
+  if (authError) return authError;
+
   const apiKey = process.env.GOOGLE_MAPS_API_KEY;
   if (!apiKey) {
     return NextResponse.json(

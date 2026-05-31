@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import AuthGuard from "@/components/AuthGuard";
 import { upsertLeadFromMapResult } from "@/lib/leads";
+import { getAuthBearerHeader } from "@/lib/supabaseAuth";
 
 type SearchMode = "radius" | "place";
 
@@ -195,7 +196,11 @@ export default function ProspeccaoMapaPage() {
       }
 
       if (searchMode === "radius" && !useCurrentLocation && locationText.trim()) {
-        const geoResp = await fetch(`/api/maps/geocode?address=${encodeURIComponent(locationText.trim())}`);
+        const geoResp = await fetch(`/api/maps/geocode?address=${encodeURIComponent(locationText.trim())}`, {
+          headers: {
+            ...getAuthBearerHeader(),
+          },
+        });
         const geoData = await geoResp.json();
         if (!geoResp.ok) {
           setResults([]);
@@ -214,7 +219,10 @@ export default function ProspeccaoMapaPage() {
       for (let pageIndex = 0; pageIndex < maxPages; pageIndex++) {
         const resp = await fetch("/api/maps/search", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...getAuthBearerHeader(),
+          },
           body: JSON.stringify({
             query,
             maxResults: 20,

@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
+import { ensureApiAuth } from "@/lib/serverApiAuth";
 
 type GroqMode = "resumo" | "resposta" | "tarefa" | "prioridade";
 
 export async function POST(req: NextRequest) {
+  const authError = await ensureApiAuth(req);
+  if (authError) return authError;
+
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
     return NextResponse.json({ error: "GROQ_API_KEY não configurada no servidor." }, { status: 500 });

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { CnpjData, normalizeCnpj, maskCnpj } from "@/lib/cnpj";
+import { getAuthBearerHeader } from "@/lib/supabaseAuth";
 import ResultsTable from "./ResultsTable";
 
 export default function BatchLookup() {
@@ -24,7 +25,11 @@ export default function BatchLookup() {
       const cnpj = normalizeCnpj(lines[i]);
       setProgress(Math.round(((i + 1) / lines.length) * 100));
       try {
-        const resp = await fetch(`/api/cnpj/${cnpj}`);
+        const resp = await fetch(`/api/cnpj/${cnpj}`, {
+          headers: {
+            ...getAuthBearerHeader(),
+          },
+        });
         const json = await resp.json();
         if (!resp.ok) errs.push(`${maskCnpj(cnpj)}: ${json.message ?? `HTTP ${resp.status}`}`);
         else ok.push(json);

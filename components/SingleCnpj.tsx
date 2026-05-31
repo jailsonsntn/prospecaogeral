@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { CnpjData, normalizeCnpj, maskCnpj, serializeValue, downloadCsv } from "@/lib/cnpj";
 import { fetchLeads, getLeadKeyFromRow, removeLead, upsertLeadFromRow } from "@/lib/leads";
+import { getAuthBearerHeader } from "@/lib/supabaseAuth";
 
 export default function SingleCnpj() {
   const [input, setInput]     = useState("");
@@ -30,7 +31,11 @@ export default function SingleCnpj() {
     if (cnpj.length !== 14) { setError("CNPJ inválido. Informe 14 caracteres."); return; }
     setLoading(true); setError(""); setData(null);
     try {
-      const resp = await fetch(`/api/cnpj/${cnpj}`);
+      const resp = await fetch(`/api/cnpj/${cnpj}`, {
+        headers: {
+          ...getAuthBearerHeader(),
+        },
+      });
       const json = await resp.json();
       if (!resp.ok) { setError(json.message ?? `Erro HTTP ${resp.status}`); return; }
       setData(json);

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { CnpjData } from "@/lib/cnpj";
+import { getAuthBearerHeader } from "@/lib/supabaseAuth";
 import ResultsTable from "./ResultsTable";
 
 const INPUT =
@@ -102,7 +103,11 @@ export default function AdvancedSearch() {
 
     setLoading(true); setError("");
     try {
-      const resp = await fetch(`/api/search?${params}`);
+      const resp = await fetch(`/api/search?${params}`, {
+        headers: {
+          ...getAuthBearerHeader(),
+        },
+      });
       const json = await resp.json();
       if (!resp.ok) { setError(json.message ?? `Erro HTTP ${resp.status}`); return; }
       const data: CnpjData[] = Array.isArray(json) ? json : (json.data ?? []);

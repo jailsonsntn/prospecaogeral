@@ -67,6 +67,11 @@ export function getSessionEventName(): string {
   return SESSION_EVENT;
 }
 
+export function getAuthBearerHeader(): Record<string, string> {
+  const token = getSession()?.access_token;
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 async function parseAuthError(resp: Response): Promise<string> {
   try {
     const body = await resp.json();

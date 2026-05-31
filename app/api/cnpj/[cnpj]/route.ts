@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { ensureApiAuth } from "@/lib/serverApiAuth";
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ cnpj: string }> }
 ) {
+  const authError = await ensureApiAuth(req);
+  if (authError) return authError;
+
   const { cnpj: rawCnpj } = await params;
   const cnpj = rawCnpj.replace(/[^0-9A-Za-z]/g, "").toUpperCase();
 

@@ -31,6 +31,7 @@ import {
   getLeadsEventName,
   upsertLeadByCurrentData,
 } from "@/lib/leads";
+import { getAuthBearerHeader } from "@/lib/supabaseAuth";
 
 const STATUS_OPTIONS: LeadStatus[] = ["novo", "contatado", "qualificado", "proposta", "fechado", "perdido"];
 
@@ -163,7 +164,10 @@ function AiPageContent() {
 
     const resp = await fetch("/api/ai/groq", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthBearerHeader(),
+      },
       body: JSON.stringify({
         mode,
         leadId: selectedLead.id,
