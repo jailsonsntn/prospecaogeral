@@ -254,7 +254,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
       </nav>
       )}
 
-      {!isPublicPath && showBackToTop && (
+      {showBackToTop && (
         <button
           type="button"
           onClick={handleBackToTop}
