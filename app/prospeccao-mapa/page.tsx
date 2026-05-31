@@ -53,6 +53,7 @@ export default function ProspeccaoMapaPage() {
   const [onlyWithSocial, setOnlyWithSocial] = useState(false);
   const [onlyWithoutSocial, setOnlyWithoutSocial] = useState(false);
   const [expandCards, setExpandCards] = useState(false);
+  const [collapseSearchPanel, setCollapseSearchPanel] = useState(false);
 
   const hasSocial = (item: MapResultItem): boolean => {
     const target = `${item.website || ""} ${item.googleMapsUri || ""}`.toLowerCase();
@@ -260,14 +261,28 @@ export default function ProspeccaoMapaPage() {
     <AuthGuard>
       <div className="space-y-5">
         <section className="dashboard-shell panel-fade-up p-5 sm:p-7">
-          <p className="label-kicker">Prospecção Mapa</p>
-          <h2 className="font-display mt-2 text-2xl font-semibold text-slate-900 sm:text-3xl">
-            Captação por Google Maps
-          </h2>
-          <p className="mt-2 max-w-3xl text-sm text-slate-600 sm:text-base">
-            Pesquise empresas por segmento e localidade. Cada resultado pode ser enviado ao CRM imediatamente.
-          </p>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="label-kicker">Prospecção Mapa</p>
+              <h2 className="font-display mt-2 text-2xl font-semibold text-slate-900 sm:text-3xl">
+                Captação por Google Maps
+              </h2>
+              <p className="mt-2 max-w-3xl text-sm text-slate-600 sm:text-base">
+                Pesquise empresas por segmento e localidade. Cada resultado pode ser enviado ao CRM imediatamente.
+              </p>
+            </div>
 
+            <button
+              type="button"
+              onClick={() => setCollapseSearchPanel((current) => !current)}
+              className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+            >
+              {collapseSearchPanel ? "Expandir busca" : "Retrair busca"}
+            </button>
+          </div>
+
+          {!collapseSearchPanel && (
+          <>
           <div className="mt-4 flex flex-wrap gap-2">
             <button
               type="button"
@@ -460,6 +475,12 @@ export default function ProspeccaoMapaPage() {
 
           {message && <p className="mt-3 text-sm text-slate-600">{message}</p>}
           {error && <p className="mt-3 text-sm text-red-700">{error}</p>}
+          </>
+          )}
+
+          {collapseSearchPanel && (
+            <p className="mt-3 text-sm text-slate-600">Painel de busca retraído. Clique em "Expandir busca" para editar os filtros.</p>
+          )}
         </section>
 
         <section className="panel-card p-4">
