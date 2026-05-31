@@ -115,6 +115,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const isPublicPath = pathname === "/login" || pathname.startsWith("/logout");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showBackToTop, setShowBackToTop] = useState(false);
   const desktopMenuRef = useRef<HTMLDivElement | null>(null);
   const mobileMenuRef = useRef<HTMLDivElement | null>(null);
 
@@ -123,6 +124,20 @@ export default function AppShell({ children }: { children: ReactNode }) {
       setMenuOpen(false);
     }
   }, [isPublicPath, sidebarCollapsed]);
+
+  useEffect(() => {
+    function onScroll() {
+      setShowBackToTop(window.scrollY > 280);
+    }
+
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [pathname]);
+
+  function handleBackToTop() {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
 
   useEffect(() => {
     function onOutsideClick(event: MouseEvent) {
@@ -237,6 +252,21 @@ export default function AppShell({ children }: { children: ReactNode }) {
           );
         })}
       </nav>
+      )}
+
+      {!isPublicPath && showBackToTop && (
+        <button
+          type="button"
+          onClick={handleBackToTop}
+          className="fixed bottom-24 right-4 z-[60] inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-700 shadow-lg hover:bg-slate-50 lg:bottom-6 lg:right-6"
+          aria-label="Voltar ao topo"
+          title="Voltar ao topo"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5">
+            <path d="M12 5v14" />
+            <path d="m6 11 6-6 6 6" />
+          </svg>
+        </button>
       )}
     </div>
   );
