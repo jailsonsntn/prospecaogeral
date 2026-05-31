@@ -25,10 +25,37 @@ export default function ResultsTable({ rows, filename = "cnpj.csv" }: Props) {
   const [selectedRow, setSelectedRow] = useState<CnpjData | null>(null);
   const [showJson, setShowJson] = useState(false);
   const [leadKeys, setLeadKeys] = useState<Set<string>>(new Set());
+  const [savingLeadKey, setSavingLeadKey] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState("");
 
   async function reloadLeadKeys() {
     const keys = new Set((await fetchLeads()).map((lead) => lead.cnpj));
     setLeadKeys(keys);
+  }
+
+  async function toggleLead(row: CnpjData) {
+    const key = getLeadKeyFromRow(row);
+    if (!key) {
+      setFeedback("Nao foi possivel identificar o CNPJ para marcar lead.");
+      return;
+    }
+
+    setSavingLeadKey(key);
+    setFeedback("");
+    try {
+      if (leadKeys.has(key)) {
+        await removeLead(key);
+        setFeedback(`Lead ${maskCnpj(key)} removido do CRM.`);
+      } else {
+        await upsertLeadFromRow(row);
+        setFeedback(`Lead ${maskCnpj(key)} adicionado ao CRM.`);
+      }
+      await reloadLeadKeys();
+    } catch {
+      setFeedback("Falha ao atualizar lead no CRM. Tente novamente.");
+    } finally {
+      setSavingLeadKey(null);
+    }
   }
 
   useEffect(() => {
@@ -96,6 +123,12 @@ export default function ResultsTable({ rows, filename = "cnpj.csv" }: Props) {
         </button>
       </div>
 
+      {feedback && (
+        <div className="rounded-lg border border-teal-200 bg-teal-50 px-3 py-2 text-sm text-teal-800">
+          {feedback}
+        </div>
+      )}
+
       {/* Tabela */}
       <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
         <table className="min-w-full divide-y divide-slate-200 text-sm">
@@ -111,6 +144,9 @@ export default function ResultsTable({ rows, filename = "cnpj.csv" }: Props) {
                   {col}
                 </th>
               ))}
+              <th className="whitespace-nowrap px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Acoes
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 bg-white">
@@ -153,6 +189,17 @@ export default function ResultsTable({ rows, filename = "cnpj.csv" }: Props) {
                       </td>
                     );
                   })}
+
+                  <td className="px-3 py-2">
+                    <button
+                      type="button"
+                      onClick={() => void toggleLead(row)}
+                      disabled={savingLeadKey === getLeadKeyFromRow(row)}
+                      className="rounded-md bg-amber-500 px-2.5 py-1 text-xs font-semibold text-white hover:bg-amber-600 disabled:opacity-60"
+                    >
+                      {leadKeys.has(getLeadKeyFromRow(row)) ? "Remover lead" : "Marcar lead"}
+                    </button>
+                  </td>
                 </tr>
               );
             })}
@@ -310,16 +357,11 @@ export default function ResultsTable({ rows, filename = "cnpj.csv" }: Props) {
             <div className="mt-4 flex flex-wrap gap-3">
               <button
                 type="button"
-                onClick={async () => {
+                onClick={() => {
                   if (!selectedRow) return;
-                  const key = getLeadKeyFromRow(selectedRow);
-                  if (leadKeys.has(key)) {
-                    await removeLead(key);
-                  } else {
-                    await upsertLeadFromRow(selectedRow);
-                  }
-                  await reloadLeadKeys();
+                  void toggleLead(selectedRow);
                 }}
+                disabled={selectedRow ? savingLeadKey === getLeadKeyFromRow(selectedRow) : false}
                 className="rounded-lg bg-amber-500 px-3 py-1.5 text-sm font-semibold text-white hover:bg-amber-600"
               >
                 {selectedRow && leadKeys.has(getLeadKeyFromRow(selectedRow)) ? "Remover do CRM" : "Marcar como lead"}

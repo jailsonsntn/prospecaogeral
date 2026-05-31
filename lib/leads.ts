@@ -1,16 +1,22 @@
 import { CnpjData, normalizeCnpj, serializeValue } from "@/lib/cnpj";
-import { getSession, getSupabaseConfig } from "@/lib/supabaseAuth";
+import { canUseSupabase, getCurrentOwnerId, supabaseFetch } from "@/lib/supabaseRest";
 
-export type LeadStatus = "novo" | "contato" | "qualificado" | "proposta" | "fechado" | "perdido";
+export type LeadStatus = "novo" | "contatado" | "qualificado" | "proposta" | "fechado" | "perdido";
 export type LeadChannel = "email" | "whatsapp" | "telefone" | "outro";
 export type LeadPriority = "baixa" | "media" | "alta";
+export type LeadSource = "cnpj" | "maps";
 
 export interface LeadItem {
+  id?: string;
+  source: LeadSource;
+  externalId: string;
   cnpj: string;
   razaoSocial: string;
   nomeFantasia: string;
   email: string;
   telefone: string;
+  website: string;
+  endereco: string;
   municipio: string;
   uf: string;
   status: LeadStatus;
@@ -23,28 +29,39 @@ export interface LeadItem {
   sourceData: CnpjData;
 }
 
+export interface MapLeadInput {
+  placeId: string;
+  name: string;
+  phone?: string;
+  address?: string;
+  website?: string;
+}
+
 interface SupabaseLeadRow {
+  id: string;
   owner_id: string;
-  cnpj: string;
-  razao_social: string;
-  nome_fantasia: string;
+  source: LeadSource;
+  external_id: string;
+  business_name: string;
+  cnpj: string | null;
+  place_id: string | null;
+  phone: string | null;
   email: string;
-  telefone: string;
-  municipio: string;
-  uf: string;
+  website: string | null;
+  city: string | null;
+  state: string | null;
+  address: string | null;
   status: LeadStatus;
-  canal_preferencial: LeadChannel;
-  prioridade: LeadPriority;
-  proximo_contato: string | null;
-  observacao: string;
-  source_data: CnpjData;
+  priority: LeadPriority;
+  last_contact_at: string | null;
+  next_action_at: string | null;
   created_at?: string;
   updated_at?: string;
 }
 
 const STORAGE_KEY = "radar-cnpj-leads";
 const LEADS_EVENT = "radar-leads-updated";
-const SUPABASE_TABLE = "crm_leads";
+const SUPABASE_TABLE = "leads";
 
 function canUseStorage(): boolean {
   return typeof window !== "undefined" && typeof window.localStorage !== "undefined";
@@ -54,15 +71,6 @@ function emitLeadsUpdated() {
   if (typeof window !== "undefined") {
     window.dispatchEvent(new CustomEvent(LEADS_EVENT));
   }
-}
-
-function canUseSupabase(): boolean {
-  const { url, publishableKey } = getSupabaseConfig();
-  return Boolean(url && publishableKey && getSession()?.access_token);
-}
-
-function getCurrentOwnerId(): string {
-  return getSession()?.user?.id || "";
 }
 
 function withOwnerFilter(path: string): string {
@@ -94,11 +102,16 @@ function writeLocalLeads(leads: LeadItem[]): void {
 function normalizeLeadItem(lead: Partial<LeadItem> & Pick<LeadItem, "cnpj">): LeadItem {
   const now = new Date().toISOString();
   return {
+    id: lead.id,
+    source: lead.source || "cnpj",
+    externalId: lead.externalId || getLeadKey(lead.cnpj),
     cnpj: getLeadKey(lead.cnpj),
     razaoSocial: lead.razaoSocial || "",
     nomeFantasia: lead.nomeFantasia || "",
     email: lead.email || "",
     telefone: lead.telefone || "",
+    website: lead.website || "",
+    endereco: lead.endereco || "",
     municipio: lead.municipio || "",
     uf: lead.uf || "",
     status: lead.status || "novo",
@@ -114,63 +127,52 @@ function normalizeLeadItem(lead: Partial<LeadItem> & Pick<LeadItem, "cnpj">): Le
 
 function fromSupabaseRow(row: SupabaseLeadRow): LeadItem {
   return normalizeLeadItem({
-    cnpj: row.cnpj,
-    razaoSocial: row.razao_social,
-    nomeFantasia: row.nome_fantasia,
+    id: row.id,
+    source: row.source,
+    externalId: row.external_id,
+    cnpj: row.cnpj || `MAP-${row.place_id || row.external_id}`,
+    razaoSocial: row.business_name,
+    nomeFantasia: row.business_name,
     email: row.email,
-    telefone: row.telefone,
-    municipio: row.municipio,
-    uf: row.uf,
+    telefone: row.phone || "",
+    website: row.website || "",
+    endereco: row.address || "",
+    municipio: row.city || "",
+    uf: row.state || "",
     status: row.status,
-    canalPreferencial: row.canal_preferencial,
-    prioridade: row.prioridade,
-    proximoContato: row.proximo_contato || "",
-    observacao: row.observacao,
+    canalPreferencial: "email",
+    prioridade: row.priority,
+    proximoContato: row.next_action_at || "",
+    observacao: "",
     createdAt: row.created_at,
     updatedAt: row.updated_at,
-    sourceData: row.source_data,
+    sourceData: {},
   });
 }
 
 function toSupabaseRow(lead: LeadItem): SupabaseLeadRow {
   const ownerId = getCurrentOwnerId();
   return {
+    id: lead.id || "",
     owner_id: ownerId,
-    cnpj: getLeadKey(lead.cnpj),
-    razao_social: lead.razaoSocial,
-    nome_fantasia: lead.nomeFantasia,
+    source: lead.source,
+    external_id: lead.externalId,
+    business_name: lead.razaoSocial || lead.nomeFantasia,
+    cnpj: lead.source === "cnpj" ? getLeadKey(lead.cnpj) : null,
+    place_id: lead.source === "maps" ? lead.externalId : null,
+    phone: lead.telefone,
     email: lead.email,
-    telefone: lead.telefone,
-    municipio: lead.municipio,
-    uf: lead.uf,
+    website: lead.website || null,
+    city: lead.municipio,
+    state: lead.uf,
+    address: lead.endereco || null,
     status: lead.status,
-    canal_preferencial: lead.canalPreferencial,
-    prioridade: lead.prioridade,
-    proximo_contato: lead.proximoContato || null,
-    observacao: lead.observacao,
-    source_data: lead.sourceData || {},
+    priority: lead.prioridade,
+    last_contact_at: null,
+    next_action_at: lead.proximoContato || null,
+    created_at: lead.createdAt,
+    updated_at: lead.updatedAt,
   };
-}
-
-async function supabaseFetch(path: string, init?: RequestInit): Promise<Response> {
-  const { url, publishableKey } = getSupabaseConfig();
-  const session = getSession();
-
-  const headers: Record<string, string> = {
-    apikey: publishableKey,
-    ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
-    ...(init?.headers as Record<string, string> | undefined),
-  };
-
-  if (!headers["Content-Type"] && init?.body) {
-    headers["Content-Type"] = "application/json";
-  }
-
-  return fetch(`${url}/rest/v1/${path}`, {
-    cache: "no-store",
-    ...init,
-    headers,
-  });
 }
 
 async function loadFromSupabase(): Promise<LeadItem[]> {
@@ -181,7 +183,7 @@ async function loadFromSupabase(): Promise<LeadItem[]> {
 
   const resp = await supabaseFetch(
     withOwnerFilter(
-      `${SUPABASE_TABLE}?select=owner_id,cnpj,razao_social,nome_fantasia,email,telefone,municipio,uf,status,canal_preferencial,prioridade,proximo_contato,observacao,source_data,created_at,updated_at&order=updated_at.desc`
+      `${SUPABASE_TABLE}?select=id,owner_id,source,external_id,business_name,cnpj,place_id,phone,email,website,city,state,address,status,priority,last_contact_at,next_action_at,created_at,updated_at&order=updated_at.desc`
     )
   );
 
@@ -200,7 +202,25 @@ async function insertSupabaseLead(lead: LeadItem): Promise<LeadItem | null> {
       Prefer: "return=representation",
       "Content-Type": "application/json",
     },
-    body: JSON.stringify([toSupabaseRow(lead)]),
+    body: JSON.stringify([
+      {
+        owner_id: getCurrentOwnerId(),
+        source: lead.source,
+        external_id: lead.externalId,
+        business_name: lead.razaoSocial || lead.nomeFantasia,
+        cnpj: lead.source === "cnpj" ? getLeadKey(lead.cnpj) : null,
+        place_id: lead.source === "maps" ? lead.externalId : null,
+        phone: lead.telefone || null,
+        email: lead.email || "",
+        website: lead.website || null,
+        city: lead.municipio || null,
+        state: lead.uf || null,
+        address: lead.endereco || null,
+        status: lead.status,
+        priority: lead.prioridade,
+        next_action_at: lead.proximoContato || null,
+      },
+    ]),
   });
 
   if (!resp.ok) return null;
@@ -214,31 +234,37 @@ async function patchSupabaseLead(cnpj: string, updates: Partial<LeadItem>): Prom
 
   const payload: Record<string, unknown> = {};
   if (updates.status) payload.status = updates.status;
-  if (updates.canalPreferencial) payload.canal_preferencial = updates.canalPreferencial;
-  if (updates.prioridade) payload.prioridade = updates.prioridade;
-  if (updates.proximoContato !== undefined) payload.proximo_contato = updates.proximoContato || null;
-  if (updates.observacao !== undefined) payload.observacao = updates.observacao;
-  if (updates.razaoSocial !== undefined) payload.razao_social = updates.razaoSocial;
-  if (updates.nomeFantasia !== undefined) payload.nome_fantasia = updates.nomeFantasia;
+  if (updates.prioridade) payload.priority = updates.prioridade;
+  if (updates.proximoContato !== undefined) payload.next_action_at = updates.proximoContato || null;
+  if (updates.razaoSocial !== undefined) payload.business_name = updates.razaoSocial;
+  if (updates.nomeFantasia !== undefined && !updates.razaoSocial) payload.business_name = updates.nomeFantasia;
   if (updates.email !== undefined) payload.email = updates.email;
-  if (updates.telefone !== undefined) payload.telefone = updates.telefone;
-  if (updates.municipio !== undefined) payload.municipio = updates.municipio;
-  if (updates.uf !== undefined) payload.uf = updates.uf;
-  if (updates.sourceData !== undefined) payload.source_data = updates.sourceData;
+  if (updates.telefone !== undefined) payload.phone = updates.telefone;
+  if (updates.municipio !== undefined) payload.city = updates.municipio;
+  if (updates.uf !== undefined) payload.state = updates.uf;
+  if (updates.website !== undefined) payload.website = updates.website || null;
+  if (updates.endereco !== undefined) payload.address = updates.endereco || null;
 
   if (Object.keys(payload).length === 0) return;
 
   const ownerId = getCurrentOwnerId();
   if (!ownerId) return;
 
-  await supabaseFetch(`${SUPABASE_TABLE}?owner_id=eq.${encodeURIComponent(ownerId)}&cnpj=eq.${encodeURIComponent(getLeadKey(cnpj))}`, {
+  const lead = (await fetchLeads()).find((item) => item.cnpj === getLeadKey(cnpj));
+  const externalId = lead?.externalId || getLeadKey(cnpj);
+  const source = lead?.source || "cnpj";
+
+  await supabaseFetch(
+    `${SUPABASE_TABLE}?owner_id=eq.${encodeURIComponent(ownerId)}&source=eq.${encodeURIComponent(source)}&external_id=eq.${encodeURIComponent(externalId)}`,
+    {
     method: "PATCH",
     headers: {
       Prefer: "return=minimal",
       "Content-Type": "application/json",
     },
     body: JSON.stringify(payload),
-  });
+    }
+  );
 }
 
 async function deleteSupabaseLead(cnpj: string): Promise<void> {
@@ -247,9 +273,15 @@ async function deleteSupabaseLead(cnpj: string): Promise<void> {
   const ownerId = getCurrentOwnerId();
   if (!ownerId) return;
 
-  await supabaseFetch(`${SUPABASE_TABLE}?owner_id=eq.${encodeURIComponent(ownerId)}&cnpj=eq.${encodeURIComponent(getLeadKey(cnpj))}`, {
-    method: "DELETE",
-  });
+  const lead = (await fetchLeads()).find((item) => item.cnpj === getLeadKey(cnpj));
+  if (!lead) return;
+
+  await supabaseFetch(
+    `${SUPABASE_TABLE}?owner_id=eq.${encodeURIComponent(ownerId)}&source=eq.${encodeURIComponent(lead.source)}&external_id=eq.${encodeURIComponent(lead.externalId)}`,
+    {
+      method: "DELETE",
+    }
+  );
 }
 
 export function getLeadsEventName(): string {
@@ -282,11 +314,22 @@ export async function upsertLeadFromRow(row: CnpjData): Promise<LeadItem> {
   const existing = leads.find((lead) => lead.cnpj === cnpj);
 
   const nextLead: LeadItem = normalizeLeadItem({
+    id: existing?.id,
+    source: "cnpj",
+    externalId: cnpj,
     cnpj,
     razaoSocial: serializeValue(row.razao_social),
     nomeFantasia: serializeValue(row.nome_fantasia),
     email: serializeValue(row.email),
     telefone: serializeValue(row.ddd_telefone_1) || serializeValue(row.ddd_telefone_2),
+    website: serializeValue(row.website),
+    endereco: [
+      serializeValue(row.logradouro),
+      serializeValue(row.numero),
+      serializeValue(row.bairro),
+    ]
+      .filter(Boolean)
+      .join(", "),
     municipio: serializeValue(row.municipio),
     uf: serializeValue(row.uf),
     status: existing?.status || "novo",
@@ -305,6 +348,48 @@ export async function upsertLeadFromRow(row: CnpjData): Promise<LeadItem> {
   }
   const finalLead = persisted || nextLead;
   writeLocalLeads([finalLead, ...leads.filter((lead) => lead.cnpj !== cnpj)]);
+  return finalLead;
+}
+
+export async function upsertLeadFromMapResult(input: MapLeadInput): Promise<LeadItem> {
+  const leads = await fetchLeads();
+  const key = getLeadKey(`MAP-${input.placeId}`);
+  const existing = leads.find((lead) => lead.cnpj === key);
+  const now = new Date().toISOString();
+
+  const lead = normalizeLeadItem({
+    id: existing?.id,
+    source: "maps",
+    externalId: input.placeId,
+    cnpj: key,
+    razaoSocial: input.name,
+    nomeFantasia: input.name,
+    telefone: input.phone || "",
+    email: "",
+    website: input.website || "",
+    endereco: input.address || "",
+    municipio: existing?.municipio || "",
+    uf: existing?.uf || "",
+    status: existing?.status || "novo",
+    canalPreferencial: existing?.canalPreferencial || "telefone",
+    prioridade: existing?.prioridade || "media",
+    proximoContato: existing?.proximoContato || "",
+    observacao: existing?.observacao || "",
+    createdAt: existing?.createdAt || now,
+    updatedAt: now,
+    sourceData: {
+      origem: "maps",
+      place_id: input.placeId,
+      google_maps_name: input.name,
+    },
+  });
+
+  const persisted = existing ? null : await insertSupabaseLead(lead);
+  if (existing) {
+    await patchSupabaseLead(lead.cnpj, lead);
+  }
+  const finalLead = persisted || lead;
+  writeLocalLeads([finalLead, ...leads.filter((item) => item.cnpj !== lead.cnpj)]);
   return finalLead;
 }
 
@@ -333,6 +418,27 @@ export async function updateLead(
 
   await patchSupabaseLead(key, nextLead);
   writeLocalLeads(leads.map((lead) => (lead.cnpj === key ? nextLead : lead)));
+}
+
+export async function upsertLeadByCurrentData(lead: LeadItem): Promise<void> {
+  const key = getLeadKey(lead.cnpj);
+  const currentLeads = await fetchLeads();
+  const existing = currentLeads.find((item) => item.cnpj === key);
+
+  const nextLead = normalizeLeadItem({
+    ...lead,
+    id: existing?.id || lead.id,
+    cnpj: key,
+    updatedAt: new Date().toISOString(),
+  });
+
+  if (existing) {
+    await patchSupabaseLead(key, nextLead);
+  } else {
+    await insertSupabaseLead(nextLead);
+  }
+
+  writeLocalLeads([nextLead, ...currentLeads.filter((item) => item.cnpj !== key)]);
 }
 
 export async function isLead(cnpj: string): Promise<boolean> {

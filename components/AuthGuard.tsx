@@ -25,7 +25,7 @@ export default function AuthGuard({ children }: Props) {
 
       const current = getSession();
       if (!current) {
-        router.replace("/");
+        router.replace("/login");
         if (!isMounted) return;
         setChecking(false);
         return;
@@ -37,7 +37,7 @@ export default function AuthGuard({ children }: Props) {
       if (!valid) {
         clearSession();
         setSession(null);
-        router.replace("/");
+        router.replace("/login");
         setChecking(false);
         return;
       }
@@ -63,7 +63,7 @@ export default function AuthGuard({ children }: Props) {
 
   useEffect(() => {
     if (!checking && hasSupabaseConfig() && !session) {
-      router.replace("/");
+      router.replace("/login");
     }
   }, [checking, session, router]);
 

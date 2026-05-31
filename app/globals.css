@@ -114,6 +114,137 @@ body {
 	animation: fadeUp 0.65s ease both;
 }
 
+.crm-shell {
+	position: relative;
+	z-index: 1;
+	display: grid;
+	grid-template-columns: 300px 1fr;
+	min-height: 100vh;
+	gap: 1.25rem;
+	padding: 1rem;
+}
+
+.crm-sidebar {
+	position: sticky;
+	top: 1rem;
+	max-height: calc(100vh - 2rem);
+	flex-direction: column;
+	border: 1px solid rgba(148, 163, 184, 0.35);
+	border-radius: 1.25rem;
+	padding: 1.25rem;
+	background: rgba(255, 255, 255, 0.8);
+	backdrop-filter: blur(8px);
+	box-shadow: 0 18px 42px -32px rgba(15, 23, 42, 0.65);
+}
+
+.crm-nav-link {
+	display: block;
+	border: 1px solid rgba(148, 163, 184, 0.35);
+	border-radius: 0.85rem;
+	padding: 0.7rem 0.85rem;
+	font-size: 0.88rem;
+	font-weight: 700;
+	letter-spacing: 0.01em;
+	color: #334155;
+	background: rgba(255, 255, 255, 0.9);
+	transition: all 0.2s ease;
+}
+
+.crm-nav-link:hover {
+	border-color: rgba(15, 118, 110, 0.45);
+	color: #0f172a;
+	transform: translateY(-1px);
+}
+
+.crm-nav-link-active {
+	border-color: rgba(15, 118, 110, 0.7);
+	background: linear-gradient(135deg, rgba(15, 118, 110, 0.16), rgba(14, 116, 144, 0.08));
+	color: #0f172a;
+}
+
+.crm-main-wrap {
+	display: flex;
+	min-width: 0;
+	flex-direction: column;
+	gap: 0.9rem;
+}
+
+.crm-topbar {
+	display: flex;
+	align-items: center;
+	justify-content: flex-start;
+	gap: 0.75rem;
+	border: 1px solid rgba(148, 163, 184, 0.35);
+	border-radius: 1.1rem;
+	padding: 0.95rem 1rem;
+	background: rgba(255, 255, 255, 0.82);
+	backdrop-filter: blur(8px);
+	box-shadow: 0 14px 35px -34px rgba(15, 23, 42, 0.65);
+}
+
+.crm-main {
+	border: 1px solid rgba(148, 163, 184, 0.35);
+	border-radius: 1.1rem;
+	background: rgba(255, 255, 255, 0.68);
+	backdrop-filter: blur(4px);
+	box-shadow: 0 14px 35px -34px rgba(15, 23, 42, 0.65);
+}
+
+.crm-mobile-nav {
+	position: fixed;
+	left: 0.75rem;
+	right: 0.75rem;
+	bottom: 0.75rem;
+	z-index: 40;
+	display: grid;
+	grid-template-columns: repeat(5, minmax(0, 1fr));
+	gap: 0.35rem;
+	border: 1px solid rgba(148, 163, 184, 0.45);
+	border-radius: 1rem;
+	padding: 0.35rem;
+	background: rgba(255, 255, 255, 0.92);
+	backdrop-filter: blur(8px);
+	box-shadow: 0 18px 34px -25px rgba(15, 23, 42, 0.6);
+}
+
+.crm-mobile-link {
+	border-radius: 0.75rem;
+	padding: 0.55rem 0.35rem;
+	text-align: center;
+	font-size: 0.72rem;
+	font-weight: 700;
+	color: #334155;
+}
+
+.crm-mobile-link-active {
+	background: linear-gradient(135deg, #0f766e, #0f172a);
+	color: #f8fafc;
+}
+
+.crm-kpi-card {
+	min-height: 6.8rem;
+	overflow: hidden;
+	padding: 0.9rem 0.95rem;
+	border-radius: 1rem;
+	box-shadow: 0 16px 30px -28px rgba(15, 23, 42, 0.6);
+}
+
+.crm-kpi-pill {
+	display: inline-flex;
+	height: 0.7rem;
+	width: 0.7rem;
+	border-radius: 9999px;
+	box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.5);
+}
+
+button[aria-label="Open Next.js Dev Tools"] {
+	display: none !important;
+}
+
+nextjs-portal {
+	display: none !important;
+}
+
 @keyframes fadeUp {
 	from {
 		opacity: 0;
@@ -128,5 +259,12 @@ body {
 @media (max-width: 640px) {
 	.dashboard-shell {
 		border-radius: 1rem;
+	}
+}
+
+@media (max-width: 1023px) {
+	.crm-shell {
+		grid-template-columns: 1fr;
+		padding: 0.75rem;
 	}
 }

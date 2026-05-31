@@ -1,0 +1,9 @@
+DROP TABLE IF EXISTS public.ai_suggestions CASCADE;
+DROP TABLE IF EXISTS public.tasks CASCADE;
+DROP TABLE IF EXISTS public.lead_activities CASCADE;
+DROP TABLE IF EXISTS public.lead_notes CASCADE;
+DROP TABLE IF EXISTS public.lead_tags CASCADE;
+DROP TABLE IF EXISTS public.tags CASCADE;
+DROP TABLE IF EXISTS public.text_templates CASCADE;
+DROP TABLE IF EXISTS public.leads CASCADE;
+DROP TABLE IF EXISTS public.profiles CASCADE;

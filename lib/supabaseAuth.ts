@@ -12,6 +12,7 @@ export interface AuthSession {
 const SESSION_KEY = "radar-supabase-session";
 const SESSION_EVENT = "radar-supabase-session-updated";
 const SESSION_ACTIVITY_KEY = "radar-supabase-session-last-activity";
+let refreshInFlight: Promise<AuthSession | null> | null = null;
 
 export function getSupabaseConfig() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
@@ -115,16 +116,84 @@ export async function signInWithEmail(email: string, password: string): Promise<
   return (await resp.json()) as AuthSession;
 }
 
+export async function refreshSession(session?: AuthSession | null): Promise<AuthSession | null> {
+  const source = session ?? getSession();
+  if (!source?.refresh_token) {
+    return null;
+  }
+
+  if (refreshInFlight) {
+    return refreshInFlight;
+  }
+
+  const { url, publishableKey } = getSupabaseConfig();
+  refreshInFlight = (async () => {
+    const resp = await fetch(`${url}/auth/v1/token?grant_type=refresh_token`, {
+      method: "POST",
+      headers: {
+        apikey: publishableKey,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ refresh_token: source.refresh_token }),
+    });
+
+    if (!resp.ok) {
+      return null;
+    }
+
+    const data = (await resp.json()) as Partial<AuthSession>;
+    const next: AuthSession = {
+      access_token: data.access_token || "",
+      refresh_token: data.refresh_token || source.refresh_token,
+      expires_in: Number(data.expires_in || source.expires_in || 0),
+      token_type: data.token_type || source.token_type || "bearer",
+      user: {
+        id: data.user?.id || source.user?.id || "",
+        email: data.user?.email || source.user?.email,
+      },
+    };
+
+    if (!next.access_token || !next.user.id) {
+      return null;
+    }
+
+    saveSession(next);
+    return next;
+  })();
+
+  try {
+    return await refreshInFlight;
+  } finally {
+    refreshInFlight = null;
+  }
+}
+
 export async function validateSession(session: AuthSession): Promise<AuthSession | null> {
   const { url, publishableKey } = getSupabaseConfig();
-  const resp = await fetch(`${url}/auth/v1/user`, {
+  let resp = await fetch(`${url}/auth/v1/user`, {
     headers: {
       apikey: publishableKey,
       Authorization: `Bearer ${session.access_token}`,
     },
   });
 
-  if (!resp.ok) {
+  if (!resp.ok && resp.status === 401) {
+    const renewed = await refreshSession(session);
+    if (!renewed) {
+      return null;
+    }
+
+    resp = await fetch(`${url}/auth/v1/user`, {
+      headers: {
+        apikey: publishableKey,
+        Authorization: `Bearer ${renewed.access_token}`,
+      },
+    });
+
+    if (!resp.ok) {
+      return null;
+    }
+  } else if (!resp.ok) {
     return null;
   }
 

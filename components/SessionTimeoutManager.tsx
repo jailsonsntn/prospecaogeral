@@ -8,7 +8,7 @@ const TIMEOUT_MS = 60 * 60 * 1000;
 const WARNING_WINDOW_MS = 60 * 1000;
 
 function isPublicPath(pathname: string): boolean {
-  return pathname === "/" || pathname.startsWith("/logout");
+  return pathname === "/login" || pathname.startsWith("/logout");
 }
 
 export default function SessionTimeoutManager() {

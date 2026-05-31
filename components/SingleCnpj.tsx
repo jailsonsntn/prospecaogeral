@@ -1,7 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { CnpjData, normalizeCnpj, maskCnpj, serializeValue, downloadCsv } from "@/lib/cnpj";
+import { fetchLeads, getLeadKeyFromRow, removeLead, upsertLeadFromRow } from "@/lib/leads";
 
 export default function SingleCnpj() {
   const [input, setInput]     = useState("");
@@ -9,6 +11,19 @@ export default function SingleCnpj() {
   const [data, setData]       = useState<CnpjData | null>(null);
   const [error, setError]     = useState("");
   const [showJson, setShowJson] = useState(false);
+  const [isLead, setIsLead] = useState(false);
+  const [savingLead, setSavingLead] = useState(false);
+  const [leadMessage, setLeadMessage] = useState("");
+
+  async function refreshLeadStatus(row: CnpjData) {
+    const key = getLeadKeyFromRow(row);
+    if (!key) {
+      setIsLead(false);
+      return;
+    }
+    const leads = await fetchLeads();
+    setIsLead(leads.some((lead) => lead.cnpj === key));
+  }
 
   async function handleSearch() {
     const cnpj = normalizeCnpj(input.trim());
@@ -19,8 +34,37 @@ export default function SingleCnpj() {
       const json = await resp.json();
       if (!resp.ok) { setError(json.message ?? `Erro HTTP ${resp.status}`); return; }
       setData(json);
+      await refreshLeadStatus(json);
+      setLeadMessage("");
     } catch { setError("Falha ao conectar à API."); }
     finally { setLoading(false); }
+  }
+
+  async function handleToggleLead() {
+    if (!data) return;
+    setSavingLead(true);
+    setLeadMessage("");
+    try {
+      const key = getLeadKeyFromRow(data);
+      if (!key) {
+        setLeadMessage("Nao foi possivel identificar o CNPJ para marcar lead.");
+        return;
+      }
+
+      if (isLead) {
+        await removeLead(key);
+        setLeadMessage(`Lead ${maskCnpj(key)} removido do CRM.`);
+        setIsLead(false);
+      } else {
+        await upsertLeadFromRow(data);
+        setLeadMessage(`Lead ${maskCnpj(key)} adicionado ao CRM.`);
+        setIsLead(true);
+      }
+    } catch {
+      setLeadMessage("Falha ao atualizar lead no CRM. Tente novamente.");
+    } finally {
+      setSavingLead(false);
+    }
   }
 
   const sv = (key: string) => serializeValue(data?.[key]) || "—";
@@ -170,6 +214,21 @@ export default function SingleCnpj() {
           {/* Ações */}
           <div className="flex flex-wrap gap-3">
             <button
+              onClick={() => void handleToggleLead()}
+              disabled={savingLead}
+              className="rounded-xl bg-amber-500 px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-amber-600 disabled:opacity-60"
+            >
+              {isLead ? "Remover do CRM" : "Marcar como lead"}
+            </button>
+
+            <Link
+              href="/crm"
+              className="rounded-xl border border-teal-200 bg-teal-50 px-5 py-2 text-sm font-semibold text-teal-800 transition-colors hover:bg-teal-100"
+            >
+              Ir para CRM
+            </Link>
+
+            <button
               onClick={() => downloadCsv([data], `cnpj_${normalizeCnpj(sv("cnpj"))}.csv`)}
               className="rounded-xl bg-emerald-700 px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-800"
             >
@@ -182,6 +241,12 @@ export default function SingleCnpj() {
               {showJson ? "Ocultar" : "Ver"} JSON completo
             </button>
           </div>
+
+          {leadMessage && (
+            <div className="rounded-xl border border-teal-200 bg-teal-50 p-3 text-sm text-teal-800">
+              {leadMessage}
+            </div>
+          )}
 
           {showJson && (
             <pre className="max-h-96 overflow-x-auto rounded-xl bg-slate-900 p-4 text-xs text-emerald-300">

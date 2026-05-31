@@ -25,52 +25,27 @@ const TABS = [
 
 export default function Tabs() {
   const [active, setActive] = useState<string>("single");
-  const activeTab = TABS.find((tab) => tab.id === active);
 
   return (
     <div className="space-y-5">
-      <div className="grid gap-4 lg:grid-cols-[320px,1fr]">
-        <div className="panel-card p-3">
-          <p className="label-kicker mb-2">Modos de Pesquisa</p>
-          <div className="space-y-2">
-            {TABS.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActive(tab.id)}
-                className={`w-full rounded-xl border px-3 py-3 text-left transition-colors ${
-                  active === tab.id
-                    ? "border-teal-700 bg-teal-50"
-                    : "border-slate-200 bg-white hover:border-teal-300"
-                }`}
-              >
-                <p className="font-display text-sm font-semibold text-slate-900">{tab.label}</p>
-                <p className="mt-0.5 text-xs text-slate-500">{tab.note}</p>
-              </button>
-            ))}
-          </div>
+      <div className="panel-card p-3 sm:p-4">
+        <p className="label-kicker mb-2">Modos de Pesquisa</p>
+        <div className="grid gap-2 md:grid-cols-3">
+          {TABS.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActive(tab.id)}
+              className={`w-full rounded-xl border px-3 py-3 text-left transition-colors ${
+                active === tab.id
+                  ? "border-teal-700 bg-teal-50"
+                  : "border-slate-200 bg-white hover:border-teal-300"
+              }`}
+            >
+              <p className="font-display text-sm font-semibold text-slate-900">{tab.label}</p>
+              <p className="mt-0.5 text-xs text-slate-500 line-clamp-2">{tab.note}</p>
+            </button>
+          ))}
         </div>
-
-        <div className="panel-card p-4 sm:p-5">
-          <p className="label-kicker">Modo ativo</p>
-          <h3 className="font-display mt-1 text-xl font-semibold text-slate-900">{activeTab?.label}</h3>
-          <p className="text-sm text-slate-600">{activeTab?.note}</p>
-        </div>
-      </div>
-
-      <div className="flex overflow-x-auto rounded-xl border border-slate-200 bg-white p-1">
-        {TABS.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActive(tab.id)}
-            className={`whitespace-nowrap rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors ${
-              active === tab.id
-                ? "bg-slate-900 text-white"
-                : "text-slate-600 hover:bg-slate-100"
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
       </div>
 
       <div className="panel-fade-up panel-card p-4 sm:p-6">
