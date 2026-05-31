@@ -113,9 +113,16 @@ function isActive(pathname: string, href: string): boolean {
 export default function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const isPublicPath = pathname === "/login" || pathname.startsWith("/logout");
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const desktopMenuRef = useRef<HTMLDivElement | null>(null);
   const mobileMenuRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (isPublicPath || sidebarCollapsed) {
+      setMenuOpen(false);
+    }
+  }, [isPublicPath, sidebarCollapsed]);
 
   useEffect(() => {
     function onOutsideClick(event: MouseEvent) {
@@ -140,13 +147,27 @@ export default function AppShell({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <div className={isPublicPath ? "relative z-[1] min-h-screen p-3 sm:p-5" : "crm-shell min-h-screen"}>
+    <div className={isPublicPath ? "relative z-[1] min-h-screen p-3 sm:p-5" : `crm-shell min-h-screen ${sidebarCollapsed ? "lg:grid-cols-[96px_1fr]" : ""}`}>
       {!isPublicPath && (
-      <aside className="crm-sidebar hidden lg:flex">
-        <div>
-          <p className="label-kicker">Plataforma CRM</p>
-          <h1 className="font-display mt-2 text-2xl font-semibold text-slate-900">AllProspect</h1>
-          <p className="mt-2 text-sm text-slate-600">Funil comercial com prospecção CNPJ e Google Maps.</p>
+      <aside className={`crm-sidebar hidden lg:flex ${sidebarCollapsed ? "px-3 py-4" : ""}`}>
+        <div className={sidebarCollapsed ? "flex justify-center" : "flex items-start justify-between gap-2"}>
+          {!sidebarCollapsed ? (
+            <div>
+              <p className="label-kicker">Plataforma CRM</p>
+              <h1 className="font-display mt-2 text-2xl font-semibold text-slate-900">AllProspect</h1>
+              <p className="mt-2 text-sm text-slate-600">Funil comercial com prospecção CNPJ e Google Maps.</p>
+            </div>
+          ) : null}
+
+          <button
+            type="button"
+            onClick={() => setSidebarCollapsed((current) => !current)}
+            className="inline-flex h-8 min-w-8 items-center justify-center rounded-lg border border-slate-300 bg-white px-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+            aria-label={sidebarCollapsed ? "Expandir barra lateral" : "Retrair barra lateral"}
+            title={sidebarCollapsed ? "Expandir" : "Retrair"}
+          >
+            {sidebarCollapsed ? ">" : "<"}
+          </button>
         </div>
 
         <nav className="mt-8 space-y-2">
@@ -156,11 +177,12 @@ export default function AppShell({ children }: { children: ReactNode }) {
               <Link
                 key={item.href}
                 href={item.href}
-                className={active ? "crm-nav-link crm-nav-link-active" : "crm-nav-link"}
+                className={active ? `crm-nav-link crm-nav-link-active ${sidebarCollapsed ? "px-2" : ""}` : `crm-nav-link ${sidebarCollapsed ? "px-2" : ""}`}
+                title={item.label}
               >
-                <span className="inline-flex items-center gap-2">
+                <span className={`inline-flex items-center ${sidebarCollapsed ? "justify-center" : "gap-2"}`}>
                   <Icon name={item.href === "/" ? "home" : item.href === "/crm" ? "crm" : item.href === "/ai" ? "ai" : item.href === "/prospeccao-cnpj" ? "cnpj" : item.href === "/prospeccao-mapa" ? "map" : "config"} />
-                  {item.label}
+                  {!sidebarCollapsed && item.label}
                 </span>
               </Link>
             );
@@ -173,12 +195,13 @@ export default function AppShell({ children }: { children: ReactNode }) {
             onClick={() => setMenuOpen((value) => !value)}
             className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
             aria-label="Abrir menu do usuario"
+            title="Conta e sistema"
           >
             <Icon name="config" />
           </button>
 
           {menuOpen && (
-            <div className="absolute bottom-0 left-14 z-50 w-56 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
+            <div className={`absolute bottom-0 z-50 w-56 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl ${sidebarCollapsed ? "left-12" : "left-14"}`}>
               <div className="border-b border-slate-100 px-4 py-3">
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Conta e sistema</p>
               </div>
