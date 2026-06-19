@@ -97,6 +97,7 @@ export default function AdvancedSearch() {
   const [municipios, setMunicipios] = useState<IbgeCity[]>([]);
   const [loadingLocations, setLoadingLocations] = useState(false);
   const [locationsError, setLocationsError] = useState("");
+  const [collapseSearchPanel, setCollapseSearchPanel] = useState(false);
   const [loading, setLoading]   = useState(false);
   const [results, setResults]   = useState<CnpjData[] | null>(null);
   const [nextCursor, setNextCursor] = useState("");
@@ -223,6 +224,18 @@ export default function AdvancedSearch() {
       </div>
 
       <div className="panel-card p-5">
+        <div className="mb-4 flex items-center justify-end">
+          <button
+            type="button"
+            onClick={() => setCollapseSearchPanel((current) => !current)}
+            className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+          >
+            {collapseSearchPanel ? "Expandir busca" : "Retrair busca"}
+          </button>
+        </div>
+
+        {!collapseSearchPanel && (
+          <>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
           <div>
             <label className={LABEL}>UF</label>
@@ -338,6 +351,12 @@ export default function AdvancedSearch() {
             Limpar filtros inteligentes
           </button>
         </div>
+          </>
+        )}
+
+        {collapseSearchPanel && (
+          <p className="text-sm text-slate-600">Painel de busca retraido. Clique em "Expandir busca" para editar os filtros.</p>
+        )}
       </div>
 
       {locationsError && (
