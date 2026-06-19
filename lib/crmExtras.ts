@@ -82,11 +82,13 @@ export async function fetchTags(): Promise<CrmTag[]> {
 
 export async function createTag(name: string, color: string): Promise<CrmTag | null> {
   if (!canUseSupabase()) return null;
+  const ownerId = getCurrentOwnerId();
+  if (!ownerId) throw new Error("Sessão inválida para criar tag.");
 
   const resp = await supabaseFetch("tags", {
     method: "POST",
     headers: { Prefer: "return=representation", "Content-Type": "application/json" },
-    body: JSON.stringify([{ name, color }]),
+    body: JSON.stringify([{ owner_id: ownerId, name, color }]),
   });
 
   await throwIfResponseFailed(resp, "Falha ao criar tag.");
