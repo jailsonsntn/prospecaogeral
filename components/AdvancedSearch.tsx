@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CnpjData } from "@/lib/cnpj";
 import { getAuthBearerHeader } from "@/lib/supabaseAuth";
 import ResultsTable from "./ResultsTable";
@@ -11,6 +11,17 @@ const LABEL = "mb-1 block text-xs font-semibold uppercase tracking-wide text-sla
 
 type StatusFilter = "all" | "ativa" | "baixada";
 type MeiFilter = "all" | "sim" | "nao";
+
+interface IbgeState {
+  id: number;
+  nome: string;
+  sigla: string;
+}
+
+interface IbgeCity {
+  id: number;
+  nome: string;
+}
 
 function parseDate(value: unknown): Date | null {
   const raw = String(value ?? "").trim();
@@ -82,6 +93,10 @@ export default function AdvancedSearch() {
     cnpf: "", limit: "100", cursor: "",
     inicio_de: "", inicio_ate: "", situacao: "all" as StatusFilter, mei: "all" as MeiFilter,
   });
+  const [ufs, setUfs] = useState<IbgeState[]>([]);
+  const [municipios, setMunicipios] = useState<IbgeCity[]>([]);
+  const [loadingLocations, setLoadingLocations] = useState(false);
+  const [locationsError, setLocationsError] = useState("");
   const [loading, setLoading]   = useState(false);
   const [results, setResults]   = useState<CnpjData[] | null>(null);
   const [nextCursor, setNextCursor] = useState("");
@@ -89,6 +104,73 @@ export default function AdvancedSearch() {
   const [error, setError]       = useState("");
 
   const set = (key: string, value: string) => setForm((f) => ({ ...f, [key]: value }));
+
+  useEffect(() => {
+    let active = true;
+
+    const loadStates = async () => {
+      setLoadingLocations(true);
+      setLocationsError("");
+      try {
+        const resp = await fetch("https://servicodados.ibge.gov.br/api/v1/localidades/estados?orderBy=nome");
+        if (!resp.ok) throw new Error(`Falha ao carregar estados (${resp.status}).`);
+        const data = (await resp.json()) as IbgeState[];
+        if (!active) return;
+        setUfs(Array.isArray(data) ? data : []);
+      } catch {
+        if (!active) return;
+        setLocationsError("Nao foi possivel carregar a lista de estados do IBGE.");
+      } finally {
+        if (active) setLoadingLocations(false);
+      }
+    };
+
+    void loadStates();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!form.uf) {
+      setMunicipios([]);
+      return;
+    }
+
+    let active = true;
+
+    const loadCities = async () => {
+      setLoadingLocations(true);
+      setLocationsError("");
+      try {
+        const resp = await fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${encodeURIComponent(form.uf)}/municipios`);
+        if (!resp.ok) throw new Error(`Falha ao carregar municipios (${resp.status}).`);
+        const data = (await resp.json()) as IbgeCity[];
+        if (!active) return;
+        const nextCities = Array.isArray(data) ? data : [];
+        setMunicipios(nextCities);
+        setForm((current) => {
+          if (!current.municipio) return current;
+          return nextCities.some((city) => String(city.id) === current.municipio)
+            ? current
+            : { ...current, municipio: "" };
+        });
+      } catch {
+        if (!active) return;
+        setMunicipios([]);
+        setLocationsError("Nao foi possivel carregar os municipios para a UF selecionada.");
+      } finally {
+        if (active) setLoadingLocations(false);
+      }
+    };
+
+    void loadCities();
+
+    return () => {
+      active = false;
+    };
+  }, [form.uf]);
 
   async function handleSearch(cursorOverride?: string) {
     const params = new URLSearchParams();
@@ -144,11 +226,30 @@ export default function AdvancedSearch() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
           <div>
             <label className={LABEL}>UF</label>
-            <input value={form.uf} onChange={(e) => set("uf", e.target.value)} placeholder="SP" className={INPUT} />
+            <select
+              value={form.uf}
+              onChange={(e) => setForm((current) => ({ ...current, uf: e.target.value, municipio: "" }))}
+              className={INPUT}
+            >
+              <option value="">Selecione o estado</option>
+              {ufs.map((uf) => (
+                <option key={uf.id} value={uf.sigla}>{uf.nome} ({uf.sigla})</option>
+              ))}
+            </select>
           </div>
           <div>
-            <label className={LABEL}>Município (código IBGE/SIAFI)</label>
-            <input value={form.municipio} onChange={(e) => set("municipio", e.target.value)} placeholder="3550308" className={INPUT} />
+            <label className={LABEL}>Municipio (codigo IBGE)</label>
+            <select
+              value={form.municipio}
+              onChange={(e) => set("municipio", e.target.value)}
+              className={INPUT}
+              disabled={!form.uf || loadingLocations}
+            >
+              <option value="">{form.uf ? "Selecione o municipio" : "Escolha a UF primeiro"}</option>
+              {municipios.map((municipio) => (
+                <option key={municipio.id} value={municipio.id}>{municipio.nome}</option>
+              ))}
+            </select>
           </div>
           <div>
             <label className={LABEL}>CNAE</label>
@@ -238,6 +339,10 @@ export default function AdvancedSearch() {
           </button>
         </div>
       </div>
+
+      {locationsError && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">{locationsError}</div>
+      )}
 
       {error && (
         <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>

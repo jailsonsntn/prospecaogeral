@@ -10,6 +10,7 @@ export interface LeadNote {
   id: string;
   note: string;
   created_at: string;
+  updated_at?: string;
 }
 
 export interface LeadTask {
@@ -19,6 +20,7 @@ export interface LeadTask {
   status: "aberta" | "em_andamento" | "concluida" | "cancelada";
   due_at: string | null;
   created_at: string;
+  updated_at?: string;
 }
 
 export interface TextTemplate {
@@ -26,6 +28,20 @@ export interface TextTemplate {
   title: string;
   channel: string | null;
   content: string;
+}
+
+async function throwIfResponseFailed(resp: Response, fallbackMessage: string): Promise<void> {
+  if (resp.ok) return;
+
+  let details = "";
+  try {
+    const body = await resp.json();
+    details = body?.message || body?.error || JSON.stringify(body);
+  } catch {
+    details = await resp.text();
+  }
+
+  throw new Error(details || fallbackMessage);
 }
 
 export async function addAiSuggestion(
@@ -75,7 +91,7 @@ export async function createTag(name: string, color: string): Promise<CrmTag | n
     body: JSON.stringify([{ owner_id: ownerId, name, color }]),
   });
 
-  if (!resp.ok) return null;
+  await throwIfResponseFailed(resp, "Falha ao criar tag.");
   const rows = (await resp.json()) as CrmTag[];
   return rows[0] || null;
 }
@@ -90,23 +106,25 @@ export async function fetchLeadTagIds(leadId: string): Promise<string[]> {
 
 export async function assignTagToLead(leadId: string, tagId: string): Promise<void> {
   if (!canUseSupabase() || !leadId || !tagId) return;
-  await supabaseFetch("lead_tags", {
+  const resp = await supabaseFetch("lead_tags", {
     method: "POST",
     headers: { Prefer: "resolution=merge-duplicates", "Content-Type": "application/json" },
     body: JSON.stringify([{ lead_id: leadId, tag_id: tagId }]),
   });
+  await throwIfResponseFailed(resp, "Falha ao vincular tag ao lead.");
 }
 
 export async function unassignTagFromLead(leadId: string, tagId: string): Promise<void> {
   if (!canUseSupabase() || !leadId || !tagId) return;
-  await supabaseFetch(`lead_tags?lead_id=eq.${encodeURIComponent(leadId)}&tag_id=eq.${encodeURIComponent(tagId)}`, {
+  const resp = await supabaseFetch(`lead_tags?lead_id=eq.${encodeURIComponent(leadId)}&tag_id=eq.${encodeURIComponent(tagId)}`, {
     method: "DELETE",
   });
+  await throwIfResponseFailed(resp, "Falha ao remover tag do lead.");
 }
 
 export async function fetchLeadNotes(leadId: string): Promise<LeadNote[]> {
   if (!canUseSupabase() || !leadId) return [];
-  const resp = await supabaseFetch(`lead_notes?select=id,note,created_at&lead_id=eq.${encodeURIComponent(leadId)}&order=created_at.desc`);
+  const resp = await supabaseFetch(`lead_notes?select=id,note,created_at,updated_at&lead_id=eq.${encodeURIComponent(leadId)}&order=created_at.desc`);
   if (!resp.ok) return [];
   const rows = (await resp.json()) as LeadNote[];
   return Array.isArray(rows) ? rows : [];
@@ -117,16 +135,37 @@ export async function addLeadNote(leadId: string, note: string): Promise<void> {
   const ownerId = getCurrentOwnerId();
   if (!ownerId) return;
 
-  await supabaseFetch("lead_notes", {
+  const resp = await supabaseFetch("lead_notes", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify([{ lead_id: leadId, author_id: ownerId, note }]),
   });
+  await throwIfResponseFailed(resp, "Falha ao criar anotação.");
+}
+
+export async function updateLeadNote(noteId: string, note: string): Promise<void> {
+  if (!canUseSupabase() || !noteId || !note.trim()) return;
+
+  const resp = await supabaseFetch(`lead_notes?id=eq.${encodeURIComponent(noteId)}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ note: note.trim(), updated_at: new Date().toISOString() }),
+  });
+  await throwIfResponseFailed(resp, "Falha ao atualizar anotação.");
+}
+
+export async function deleteLeadNote(noteId: string): Promise<void> {
+  if (!canUseSupabase() || !noteId) return;
+
+  const resp = await supabaseFetch(`lead_notes?id=eq.${encodeURIComponent(noteId)}`, {
+    method: "DELETE",
+  });
+  await throwIfResponseFailed(resp, "Falha ao excluir anotação.");
 }
 
 export async function fetchLeadTasks(leadId: string): Promise<LeadTask[]> {
   if (!canUseSupabase() || !leadId) return [];
-  const resp = await supabaseFetch(`tasks?select=id,title,description,status,due_at,created_at&lead_id=eq.${encodeURIComponent(leadId)}&order=created_at.desc`);
+  const resp = await supabaseFetch(`tasks?select=id,title,description,status,due_at,created_at,updated_at&lead_id=eq.${encodeURIComponent(leadId)}&order=created_at.desc`);
   if (!resp.ok) return [];
   const rows = (await resp.json()) as LeadTask[];
   return Array.isArray(rows) ? rows : [];
@@ -137,7 +176,7 @@ export async function addLeadTask(leadId: string, title: string, dueAt?: string)
   const ownerId = getCurrentOwnerId();
   if (!ownerId) return;
 
-  await supabaseFetch("tasks", {
+  const resp = await supabaseFetch("tasks", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify([
@@ -149,16 +188,47 @@ export async function addLeadTask(leadId: string, title: string, dueAt?: string)
       },
     ]),
   });
+  await throwIfResponseFailed(resp, "Falha ao criar tarefa.");
 }
 
 export async function updateTaskStatus(taskId: string, status: LeadTask["status"]): Promise<void> {
   if (!canUseSupabase() || !taskId) return;
 
-  await supabaseFetch(`tasks?id=eq.${encodeURIComponent(taskId)}`, {
+  const resp = await supabaseFetch(`tasks?id=eq.${encodeURIComponent(taskId)}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ status }),
+    body: JSON.stringify({ status, updated_at: new Date().toISOString() }),
   });
+  await throwIfResponseFailed(resp, "Falha ao atualizar status da tarefa.");
+}
+
+export async function updateLeadTask(taskId: string, updates: Partial<Pick<LeadTask, "title" | "description" | "status">> & { due_at?: string | null }): Promise<void> {
+  if (!canUseSupabase() || !taskId) return;
+
+  const payload: Record<string, unknown> = {
+    updated_at: new Date().toISOString(),
+  };
+
+  if (updates.title !== undefined) payload.title = updates.title.trim();
+  if (updates.description !== undefined) payload.description = updates.description?.trim() || null;
+  if (updates.status !== undefined) payload.status = updates.status;
+  if (updates.due_at !== undefined) payload.due_at = updates.due_at || null;
+
+  const resp = await supabaseFetch(`tasks?id=eq.${encodeURIComponent(taskId)}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  await throwIfResponseFailed(resp, "Falha ao atualizar tarefa.");
+}
+
+export async function deleteLeadTask(taskId: string): Promise<void> {
+  if (!canUseSupabase() || !taskId) return;
+
+  const resp = await supabaseFetch(`tasks?id=eq.${encodeURIComponent(taskId)}`, {
+    method: "DELETE",
+  });
+  await throwIfResponseFailed(resp, "Falha ao excluir tarefa.");
 }
 
 export async function fetchTemplates(): Promise<TextTemplate[]> {
@@ -177,7 +247,7 @@ export async function addTemplate(title: string, channel: string, content: strin
   const ownerId = getCurrentOwnerId();
   if (!ownerId) return;
 
-  await supabaseFetch("text_templates", {
+  const resp = await supabaseFetch("text_templates", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify([
@@ -189,4 +259,5 @@ export async function addTemplate(title: string, channel: string, content: strin
       },
     ]),
   });
+  await throwIfResponseFailed(resp, "Falha ao salvar template.");
 }

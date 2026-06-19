@@ -13,6 +13,8 @@ import {
   assignTagToLead,
   createTag,
   CrmTag,
+  deleteLeadNote,
+  deleteLeadTask,
   fetchLeadNotes,
   fetchLeadTagIds,
   fetchLeadTasks,
@@ -22,6 +24,8 @@ import {
   LeadTask,
   TextTemplate,
   unassignTagFromLead,
+  updateLeadNote,
+  updateLeadTask,
   updateTaskStatus,
 } from "@/lib/crmExtras";
 import {
@@ -47,6 +51,16 @@ function statusLabel(status: LeadStatus): string {
   return map[status];
 }
 
+function toDateInputValue(value: string | null | undefined): string {
+  if (!value) return "";
+  const match = value.match(/^\d{4}-\d{2}-\d{2}/);
+  if (match) return match[0];
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toISOString().slice(0, 10);
+}
+
 function AiPageContent() {
   const searchParams = useSearchParams();
   const [leads, setLeads] = useState<LeadItem[]>([]);
@@ -70,6 +84,11 @@ function AiPageContent() {
   const [aiOutput, setAiOutput] = useState("");
   const [message, setMessage] = useState("");
   const [workspaceTab, setWorkspaceTab] = useState<"operacao" | "conteudo">("operacao");
+  const [editingNoteId, setEditingNoteId] = useState("");
+  const [editingNoteText, setEditingNoteText] = useState("");
+  const [editingTaskId, setEditingTaskId] = useState("");
+  const [editingTaskTitle, setEditingTaskTitle] = useState("");
+  const [editingTaskDueAt, setEditingTaskDueAt] = useState("");
 
   const selectedLead = useMemo(
     () => leads.find((lead) => lead.cnpj === selectedLeadKey) || null,
@@ -119,6 +138,11 @@ function AiPageContent() {
         setLeadTagIds([]);
         setNotes([]);
         setTasks([]);
+        setEditingNoteId("");
+        setEditingNoteText("");
+        setEditingTaskId("");
+        setEditingTaskTitle("");
+        setEditingTaskDueAt("");
         return;
       }
 
@@ -134,6 +158,17 @@ function AiPageContent() {
 
     void loadDetails();
   }, [selectedLead?.id]);
+
+  async function reloadLeadDetails(leadId: string) {
+    const [nextTagIds, nextNotes, nextTasks] = await Promise.all([
+      fetchLeadTagIds(leadId),
+      fetchLeadNotes(leadId),
+      fetchLeadTasks(leadId),
+    ]);
+    setLeadTagIds(nextTagIds);
+    setNotes(nextNotes);
+    setTasks(nextTasks);
+  }
 
   const stats = useMemo(() => {
     const byStatus = STATUS_OPTIONS.reduce<Record<LeadStatus, number>>(
@@ -194,7 +229,7 @@ function AiPageContent() {
         <section className="panel-card p-4 sm:p-5">
           <div className="grid gap-3 lg:grid-cols-[1fr,240px]">
             <div>
-              <p className="label-kicker">AI Workspace</p>
+              <p className="label-kicker">Lead Workspace</p>
               <h2 className="font-display mt-1 text-2xl font-semibold text-slate-900">Tarefas, insights e copys</h2>
               <p className="mt-2 text-sm text-slate-600">Central para tratar funil, textos e operação assistida por IA.</p>
             </div>
@@ -264,12 +299,18 @@ function AiPageContent() {
                             type="button"
                             onClick={async () => {
                               if (!selectedLead.id) return;
-                              if (selected) {
-                                await unassignTagFromLead(selectedLead.id, tag.id);
-                              } else {
-                                await assignTagToLead(selectedLead.id, tag.id);
+                              try {
+                                if (selected) {
+                                  await unassignTagFromLead(selectedLead.id, tag.id);
+                                  setMessage(`Tag ${tag.name} removida do lead.`);
+                                } else {
+                                  await assignTagToLead(selectedLead.id, tag.id);
+                                  setMessage(`Tag ${tag.name} vinculada ao lead.`);
+                                }
+                                setLeadTagIds(await fetchLeadTagIds(selectedLead.id));
+                              } catch (error) {
+                                setMessage(error instanceof Error ? error.message : "Falha ao atualizar tag do lead.");
                               }
-                              setLeadTagIds(await fetchLeadTagIds(selectedLead.id));
                             }}
                             className={`rounded-full border px-2 py-1 text-xs font-semibold ${
                               selected ? "border-teal-300 bg-teal-50 text-teal-800" : "border-slate-300 bg-white text-slate-600"
@@ -294,9 +335,21 @@ function AiPageContent() {
                       type="button"
                       onClick={async () => {
                         if (!newTagName.trim()) return;
-                        await createTag(newTagName.trim(), newTagColor);
-                        setNewTagName("");
-                        setTags(await fetchTags());
+                        try {
+                          const createdTag = await createTag(newTagName.trim(), newTagColor);
+                          setNewTagName("");
+                          setTags(await fetchTags());
+
+                          if (selectedLead?.id && createdTag) {
+                            await assignTagToLead(selectedLead.id, createdTag.id);
+                            setLeadTagIds(await fetchLeadTagIds(selectedLead.id));
+                            setMessage(`Tag ${createdTag.name} criada e vinculada ao lead.`);
+                          } else {
+                            setMessage("Tag criada com sucesso.");
+                          }
+                        } catch (error) {
+                          setMessage(error instanceof Error ? error.message : "Falha ao criar tag.");
+                        }
                       }}
                       className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
                     >
@@ -314,10 +367,15 @@ function AiPageContent() {
                   type="button"
                   onClick={async () => {
                     if (!selectedLead?.id || !newTaskTitle.trim()) return;
-                    await addLeadTask(selectedLead.id, newTaskTitle, newTaskDueAt);
-                    setNewTaskTitle("");
-                    setNewTaskDueAt("");
-                    setTasks(await fetchLeadTasks(selectedLead.id));
+                    try {
+                      await addLeadTask(selectedLead.id, newTaskTitle, newTaskDueAt);
+                      setNewTaskTitle("");
+                      setNewTaskDueAt("");
+                      await reloadLeadDetails(selectedLead.id);
+                      setMessage("Tarefa criada com sucesso.");
+                    } catch (error) {
+                      setMessage(error instanceof Error ? error.message : "Falha ao criar tarefa.");
+                    }
                   }}
                   className="mt-2 rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-700"
                 >
@@ -325,18 +383,113 @@ function AiPageContent() {
                 </button>
                 <div className="mt-2 max-h-44 space-y-2 overflow-y-auto">
                   {tasks.map((task) => (
-                    <label key={task.id} className="flex items-start gap-2 rounded-lg border border-slate-200 bg-white p-2 text-xs">
-                      <input
-                        type="checkbox"
-                        checked={task.status === "concluida"}
-                        onChange={async (e) => {
-                          await updateTaskStatus(task.id, e.target.checked ? "concluida" : "aberta");
-                          if (!selectedLead?.id) return;
-                          setTasks(await fetchLeadTasks(selectedLead.id));
-                        }}
-                      />
-                      <span className="text-slate-700">{task.title}</span>
-                    </label>
+                    <div key={task.id} className="rounded-lg border border-slate-200 bg-white p-2 text-xs">
+                      <div className="flex items-start gap-2">
+                        <input
+                          type="checkbox"
+                          checked={task.status === "concluida"}
+                          onChange={async (e) => {
+                            try {
+                              await updateTaskStatus(task.id, e.target.checked ? "concluida" : "aberta");
+                              if (!selectedLead?.id) return;
+                              await reloadLeadDetails(selectedLead.id);
+                              setMessage("Status da tarefa atualizado.");
+                            } catch (error) {
+                              setMessage(error instanceof Error ? error.message : "Falha ao atualizar status da tarefa.");
+                            }
+                          }}
+                        />
+                        <div className="min-w-0 flex-1">
+                          {editingTaskId === task.id ? (
+                            <div className="space-y-2">
+                              <input
+                                value={editingTaskTitle}
+                                onChange={(e) => setEditingTaskTitle(e.target.value)}
+                                className="panel-input"
+                                placeholder="Título da tarefa"
+                              />
+                              <input
+                                type="date"
+                                value={editingTaskDueAt}
+                                onChange={(e) => setEditingTaskDueAt(e.target.value)}
+                                className="panel-input"
+                              />
+                              <div className="flex flex-wrap gap-2">
+                                <button
+                                  type="button"
+                                  onClick={async () => {
+                                    if (!selectedLead?.id || !editingTaskTitle.trim()) return;
+                                    try {
+                                      await updateLeadTask(task.id, {
+                                        title: editingTaskTitle,
+                                        due_at: editingTaskDueAt || null,
+                                      });
+                                      setEditingTaskId("");
+                                      setEditingTaskTitle("");
+                                      setEditingTaskDueAt("");
+                                      await reloadLeadDetails(selectedLead.id);
+                                      setMessage("Tarefa atualizada com sucesso.");
+                                    } catch (error) {
+                                      setMessage(error instanceof Error ? error.message : "Falha ao atualizar tarefa.");
+                                    }
+                                  }}
+                                  className="rounded-lg bg-slate-900 px-2.5 py-1 text-white"
+                                >
+                                  Salvar
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingTaskId("");
+                                    setEditingTaskTitle("");
+                                    setEditingTaskDueAt("");
+                                  }}
+                                  className="rounded-lg border border-slate-300 px-2.5 py-1 text-slate-700"
+                                >
+                                  Cancelar
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              <p className="text-slate-700">{task.title}</p>
+                              {task.due_at && <p className="mt-1 text-[10px] text-slate-500">Prazo: {new Date(task.due_at).toLocaleDateString("pt-BR")}</p>}
+                            </>
+                          )}
+                        </div>
+                      </div>
+                      {editingTaskId !== task.id && (
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingTaskId(task.id);
+                              setEditingTaskTitle(task.title);
+                              setEditingTaskDueAt(toDateInputValue(task.due_at));
+                            }}
+                            className="rounded-lg border border-slate-300 px-2.5 py-1 text-slate-700"
+                          >
+                            Editar
+                          </button>
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              if (!selectedLead?.id) return;
+                              try {
+                                await deleteLeadTask(task.id);
+                                await reloadLeadDetails(selectedLead.id);
+                                setMessage("Tarefa excluída com sucesso.");
+                              } catch (error) {
+                                setMessage(error instanceof Error ? error.message : "Falha ao excluir tarefa.");
+                              }
+                            }}
+                            className="rounded-lg border border-rose-300 px-2.5 py-1 text-rose-700"
+                          >
+                            Excluir
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   ))}
                 </div>
               </article>
@@ -350,9 +503,14 @@ function AiPageContent() {
                   type="button"
                   onClick={async () => {
                     if (!selectedLead?.id || !newNote.trim()) return;
-                    await addLeadNote(selectedLead.id, newNote);
-                    setNewNote("");
-                    setNotes(await fetchLeadNotes(selectedLead.id));
+                    try {
+                      await addLeadNote(selectedLead.id, newNote);
+                      setNewNote("");
+                      await reloadLeadDetails(selectedLead.id);
+                      setMessage("Anotação criada com sucesso.");
+                    } catch (error) {
+                      setMessage(error instanceof Error ? error.message : "Falha ao criar anotação.");
+                    }
                   }}
                   className="mt-2 rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-700"
                 >
@@ -361,8 +519,79 @@ function AiPageContent() {
                 <div className="mt-2 max-h-56 space-y-2 overflow-y-auto">
                   {notes.map((note) => (
                     <article key={note.id} className="rounded-lg border border-slate-200 bg-slate-50 p-2 text-xs text-slate-700">
-                      <p>{note.note}</p>
-                      <p className="mt-1 text-[10px] text-slate-500">{new Date(note.created_at).toLocaleString("pt-BR")}</p>
+                      {editingNoteId === note.id ? (
+                        <div className="space-y-2">
+                          <textarea
+                            value={editingNoteText}
+                            onChange={(e) => setEditingNoteText(e.target.value)}
+                            rows={3}
+                            className="panel-input"
+                          />
+                          <div className="flex flex-wrap gap-2">
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                if (!selectedLead?.id || !editingNoteText.trim()) return;
+                                try {
+                                  await updateLeadNote(note.id, editingNoteText);
+                                  setEditingNoteId("");
+                                  setEditingNoteText("");
+                                  await reloadLeadDetails(selectedLead.id);
+                                  setMessage("Anotação atualizada com sucesso.");
+                                } catch (error) {
+                                  setMessage(error instanceof Error ? error.message : "Falha ao atualizar anotação.");
+                                }
+                              }}
+                              className="rounded-lg bg-slate-900 px-2.5 py-1 text-white"
+                            >
+                              Salvar
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingNoteId("");
+                                setEditingNoteText("");
+                              }}
+                              className="rounded-lg border border-slate-300 px-2.5 py-1 text-slate-700"
+                            >
+                              Cancelar
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <p>{note.note}</p>
+                          <p className="mt-1 text-[10px] text-slate-500">{new Date(note.created_at).toLocaleString("pt-BR")}</p>
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingNoteId(note.id);
+                                setEditingNoteText(note.note);
+                              }}
+                              className="rounded-lg border border-slate-300 px-2.5 py-1 text-slate-700"
+                            >
+                              Editar
+                            </button>
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                if (!selectedLead?.id) return;
+                                try {
+                                  await deleteLeadNote(note.id);
+                                  await reloadLeadDetails(selectedLead.id);
+                                  setMessage("Anotação excluída com sucesso.");
+                                } catch (error) {
+                                  setMessage(error instanceof Error ? error.message : "Falha ao excluir anotação.");
+                                }
+                              }}
+                              className="rounded-lg border border-rose-300 px-2.5 py-1 text-rose-700"
+                            >
+                              Excluir
+                            </button>
+                          </div>
+                        </>
+                      )}
                     </article>
                   ))}
                 </div>

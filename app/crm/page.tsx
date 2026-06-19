@@ -436,8 +436,8 @@ export default function CrmPage() {
                   <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Status</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Prioridade</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Canal</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Proximo contato</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Acoes</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Próximo contato</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 bg-white">
@@ -680,19 +680,18 @@ export default function CrmPage() {
                   onClick={() => setSelectedLeadKey("")}
                   className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50"
                 >
-                  Fechar
+                  X
                 </button>
               </div>
             </div>
 
             <section className="space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Central de IA</p>
-              <p className="text-sm text-slate-600">Tarefas, insights, textos e copys foram movidos para o workspace de IA.</p>
+
               <Link
                 href={`/ai?lead=${encodeURIComponent(selectedLead.cnpj)}`}
                 className="inline-flex rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-700"
               >
-                Abrir AI com este lead
+                Ir para central
               </Link>
             </section>
           </div>

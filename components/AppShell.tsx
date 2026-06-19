@@ -13,7 +13,7 @@ type NavItem = {
 const NAV_ITEMS: NavItem[] = [
   { href: "/", label: "Dashboard", short: "Home" },
   { href: "/crm", label: "CRM", short: "CRM" },
-  { href: "/ai", label: "AI", short: "AI" },
+  { href: "/ai", label: "Central  Lead", short: "AI" },
   { href: "/prospeccao-cnpj", label: "Prospecção CNPJ", short: "CNPJ" },
   { href: "/prospeccao-mapa", label: "Prospecção Mapa", short: "Mapa" },
 ];

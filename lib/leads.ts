@@ -52,9 +52,11 @@ interface SupabaseLeadRow {
   state: string | null;
   address: string | null;
   status: LeadStatus;
+  preferred_channel: LeadChannel | null;
   priority: LeadPriority;
   last_contact_at: string | null;
   next_action_at: string | null;
+  notes: string | null;
   created_at?: string;
   updated_at?: string;
 }
@@ -125,6 +127,30 @@ function normalizeLeadItem(lead: Partial<LeadItem> & Pick<LeadItem, "cnpj">): Le
   };
 }
 
+function toDateInputValue(value: string | null | undefined): string {
+  if (!value) return "";
+  const match = value.match(/^\d{4}-\d{2}-\d{2}/);
+  if (match) return match[0];
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toISOString().slice(0, 10);
+}
+
+function toSupabaseTimestamp(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    return `${trimmed}T00:00:00.000Z`;
+  }
+
+  const date = new Date(trimmed);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toISOString();
+}
+
 function fromSupabaseRow(row: SupabaseLeadRow): LeadItem {
   return normalizeLeadItem({
     id: row.id,
@@ -140,10 +166,10 @@ function fromSupabaseRow(row: SupabaseLeadRow): LeadItem {
     municipio: row.city || "",
     uf: row.state || "",
     status: row.status,
-    canalPreferencial: "email",
+    canalPreferencial: row.preferred_channel || "email",
     prioridade: row.priority,
-    proximoContato: row.next_action_at || "",
-    observacao: "",
+    proximoContato: toDateInputValue(row.next_action_at),
+    observacao: row.notes || "",
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     sourceData: {},
@@ -167,9 +193,11 @@ function toSupabaseRow(lead: LeadItem): SupabaseLeadRow {
     state: lead.uf,
     address: lead.endereco || null,
     status: lead.status,
+    preferred_channel: lead.canalPreferencial,
     priority: lead.prioridade,
     last_contact_at: null,
-    next_action_at: lead.proximoContato || null,
+    next_action_at: toSupabaseTimestamp(lead.proximoContato),
+    notes: lead.observacao || null,
     created_at: lead.createdAt,
     updated_at: lead.updatedAt,
   };
@@ -183,7 +211,7 @@ async function loadFromSupabase(): Promise<LeadItem[]> {
 
   const resp = await supabaseFetch(
     withOwnerFilter(
-      `${SUPABASE_TABLE}?select=id,owner_id,source,external_id,business_name,cnpj,place_id,phone,email,website,city,state,address,status,priority,last_contact_at,next_action_at,created_at,updated_at&order=updated_at.desc`
+      `${SUPABASE_TABLE}?select=id,owner_id,source,external_id,business_name,cnpj,place_id,phone,email,website,city,state,address,status,preferred_channel,priority,last_contact_at,next_action_at,notes,created_at,updated_at&order=updated_at.desc`
     )
   );
 
@@ -217,8 +245,10 @@ async function insertSupabaseLead(lead: LeadItem): Promise<LeadItem | null> {
         state: lead.uf || null,
         address: lead.endereco || null,
         status: lead.status,
+        preferred_channel: lead.canalPreferencial,
         priority: lead.prioridade,
-        next_action_at: lead.proximoContato || null,
+        next_action_at: toSupabaseTimestamp(lead.proximoContato),
+        notes: lead.observacao || null,
       },
     ]),
   });
@@ -234,8 +264,9 @@ async function patchSupabaseLead(cnpj: string, updates: Partial<LeadItem>): Prom
 
   const payload: Record<string, unknown> = {};
   if (updates.status) payload.status = updates.status;
+  if (updates.canalPreferencial) payload.preferred_channel = updates.canalPreferencial;
   if (updates.prioridade) payload.priority = updates.prioridade;
-  if (updates.proximoContato !== undefined) payload.next_action_at = updates.proximoContato || null;
+  if (updates.proximoContato !== undefined) payload.next_action_at = toSupabaseTimestamp(updates.proximoContato);
   if (updates.razaoSocial !== undefined) payload.business_name = updates.razaoSocial;
   if (updates.nomeFantasia !== undefined && !updates.razaoSocial) payload.business_name = updates.nomeFantasia;
   if (updates.email !== undefined) payload.email = updates.email;
@@ -244,6 +275,7 @@ async function patchSupabaseLead(cnpj: string, updates: Partial<LeadItem>): Prom
   if (updates.uf !== undefined) payload.state = updates.uf;
   if (updates.website !== undefined) payload.website = updates.website || null;
   if (updates.endereco !== undefined) payload.address = updates.endereco || null;
+  if (updates.observacao !== undefined) payload.notes = updates.observacao || null;
 
   if (Object.keys(payload).length === 0) return;
 
