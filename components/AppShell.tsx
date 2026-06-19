@@ -19,7 +19,7 @@ const NAV_ITEMS: NavItem[] = [
 ];
 
 function Icon({ name }: { name: "home" | "crm" | "ai" | "cnpj" | "map" | "config" | "menu" | "bell" | "user" | "logout" | "login" }) {
-  const common = "h-4 w-4 shrink-0";
+  const common = "h-[17px] w-[17px] shrink-0";
   switch (name) {
     case "home":
       return (
@@ -162,9 +162,9 @@ export default function AppShell({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <div className={isPublicPath ? "relative z-[1] min-h-screen p-3 sm:p-5" : `crm-shell min-h-screen ${sidebarCollapsed ? "lg:grid-cols-[96px_1fr]" : ""}`}>
+    <div className={isPublicPath ? "relative z-[1] min-h-screen p-3 sm:p-5" : `crm-shell min-h-screen ${sidebarCollapsed ? "lg:grid-cols-[92px_1fr]" : ""}`}>
       {!isPublicPath && (
-      <aside className={`crm-sidebar hidden lg:flex ${sidebarCollapsed ? "px-3 py-4" : ""}`}>
+      <aside className={`crm-sidebar hidden lg:flex ${sidebarCollapsed ? "px-2 py-3" : ""}`}>
         <div className={sidebarCollapsed ? "flex justify-center" : "flex items-start justify-between gap-2"}>
           {!sidebarCollapsed ? (
             <div>
@@ -185,17 +185,17 @@ export default function AppShell({ children }: { children: ReactNode }) {
           </button>
         </div>
 
-        <nav className="mt-8 space-y-2">
+        <nav className={`mt-5 ${sidebarCollapsed ? "space-y-1.5" : "space-y-2"}`}>
           {NAV_ITEMS.map((item) => {
             const active = isActive(pathname, item.href);
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={active ? `crm-nav-link crm-nav-link-active ${sidebarCollapsed ? "px-2" : ""}` : `crm-nav-link ${sidebarCollapsed ? "px-2" : ""}`}
+                className={active ? `crm-nav-link crm-nav-link-active ${sidebarCollapsed ? "px-1.5 py-2" : ""}` : `crm-nav-link ${sidebarCollapsed ? "px-1.5 py-2" : ""}`}
                 title={item.label}
               >
-                <span className={`inline-flex items-center ${sidebarCollapsed ? "justify-center" : "gap-2"}`}>
+                <span className={`inline-flex w-full items-center ${sidebarCollapsed ? "justify-center" : "gap-2"}`}>
                   <Icon name={item.href === "/" ? "home" : item.href === "/crm" ? "crm" : item.href === "/ai" ? "ai" : item.href === "/prospeccao-cnpj" ? "cnpj" : item.href === "/prospeccao-mapa" ? "map" : "config"} />
                   {!sidebarCollapsed && item.label}
                 </span>
@@ -204,11 +204,11 @@ export default function AppShell({ children }: { children: ReactNode }) {
           })}
         </nav>
 
-        <div ref={desktopMenuRef} className="relative mt-auto pt-4">
+        <div ref={desktopMenuRef} className="relative mt-auto flex justify-center pt-3">
           <button
             type="button"
             onClick={() => setMenuOpen((value) => !value)}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
             aria-label="Abrir menu do usuario"
             title="Conta e sistema"
           >

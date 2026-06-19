@@ -13,6 +13,7 @@ import {
   assignTagToLead,
   createTag,
   CrmTag,
+  deleteTag,
   deleteLeadNote,
   deleteLeadTask,
   fetchLeadNotes,
@@ -26,6 +27,7 @@ import {
   unassignTagFromLead,
   updateLeadNote,
   updateLeadTask,
+  updateTag,
   updateTaskStatus,
 } from "@/lib/crmExtras";
 import {
@@ -61,6 +63,26 @@ function toDateInputValue(value: string | null | undefined): string {
   return date.toISOString().slice(0, 10);
 }
 
+function EditIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-3.5 w-3.5" aria-hidden="true">
+      <path d="M4 20h4l10-10-4-4L4 16v4Z" />
+      <path d="m12 6 4 4" />
+    </svg>
+  );
+}
+
+function DeleteIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-3.5 w-3.5" aria-hidden="true">
+      <path d="M4 7h16" />
+      <path d="M10 11v6M14 11v6" />
+      <path d="M6 7l1 13h10l1-13" />
+      <path d="M9 7V4h6v3" />
+    </svg>
+  );
+}
+
 function AiPageContent() {
   const searchParams = useSearchParams();
   const [leads, setLeads] = useState<LeadItem[]>([]);
@@ -84,6 +106,9 @@ function AiPageContent() {
   const [aiOutput, setAiOutput] = useState("");
   const [message, setMessage] = useState("");
   const [workspaceTab, setWorkspaceTab] = useState<"operacao" | "conteudo">("operacao");
+  const [editingTagId, setEditingTagId] = useState("");
+  const [editingTagName, setEditingTagName] = useState("");
+  const [editingTagColor, setEditingTagColor] = useState("#0f766e");
   const [editingNoteId, setEditingNoteId] = useState("");
   const [editingNoteText, setEditingNoteText] = useState("");
   const [editingTaskId, setEditingTaskId] = useState("");
@@ -143,6 +168,9 @@ function AiPageContent() {
         setEditingTaskId("");
         setEditingTaskTitle("");
         setEditingTaskDueAt("");
+        setEditingTagId("");
+        setEditingTagName("");
+        setEditingTagColor("#0f766e");
         return;
       }
 
@@ -294,31 +322,117 @@ function AiPageContent() {
                       {tags.map((tag) => {
                         const selected = leadTagIds.includes(tag.id);
                         return (
-                          <button
-                            key={tag.id}
-                            type="button"
-                            onClick={async () => {
-                              if (!selectedLead.id) return;
-                              try {
-                                if (selected) {
-                                  await unassignTagFromLead(selectedLead.id, tag.id);
-                                  setMessage(`Tag ${tag.name} removida do lead.`);
-                                } else {
-                                  await assignTagToLead(selectedLead.id, tag.id);
-                                  setMessage(`Tag ${tag.name} vinculada ao lead.`);
-                                }
-                                setLeadTagIds(await fetchLeadTagIds(selectedLead.id));
-                              } catch (error) {
-                                setMessage(error instanceof Error ? error.message : "Falha ao atualizar tag do lead.");
-                              }
-                            }}
-                            className={`rounded-full border px-2 py-1 text-xs font-semibold ${
-                              selected ? "border-teal-300 bg-teal-50 text-teal-800" : "border-slate-300 bg-white text-slate-600"
-                            }`}
-                            style={{ borderColor: tag.color || undefined }}
-                          >
-                            {tag.name}
-                          </button>
+                          <div key={tag.id} className="group rounded-md border border-slate-200 bg-white px-1.5 py-1">
+                            {editingTagId === tag.id ? (
+                              <div className="space-y-2">
+                                <input
+                                  value={editingTagName}
+                                  onChange={(e) => setEditingTagName(e.target.value)}
+                                  className="panel-input"
+                                  placeholder="Nome da tag"
+                                />
+                                <input
+                                  type="color"
+                                  value={editingTagColor}
+                                  onChange={(e) => setEditingTagColor(e.target.value)}
+                                  className="panel-input h-9"
+                                />
+                                <div className="flex flex-wrap gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={async () => {
+                                      if (!editingTagName.trim()) return;
+                                      try {
+                                        await updateTag(tag.id, editingTagName.trim(), editingTagColor);
+                                        setEditingTagId("");
+                                        setEditingTagName("");
+                                        setEditingTagColor("#0f766e");
+                                        setTags(await fetchTags());
+                                        setMessage("Tag atualizada com sucesso.");
+                                      } catch (error) {
+                                        setMessage(error instanceof Error ? error.message : "Falha ao atualizar tag.");
+                                      }
+                                    }}
+                                    className="rounded-lg bg-slate-900 px-2.5 py-1 text-white"
+                                  >
+                                    Salvar
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setEditingTagId("");
+                                      setEditingTagName("");
+                                      setEditingTagColor("#0f766e");
+                                    }}
+                                    className="rounded-lg border border-slate-300 px-2.5 py-1 text-slate-700"
+                                  >
+                                    Cancelar
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="flex flex-wrap items-center gap-1">
+                                <button
+                                  type="button"
+                                  onClick={async () => {
+                                    if (!selectedLead.id) return;
+                                    try {
+                                      if (selected) {
+                                        await unassignTagFromLead(selectedLead.id, tag.id);
+                                        setMessage(`Tag ${tag.name} removida do lead.`);
+                                      } else {
+                                        await assignTagToLead(selectedLead.id, tag.id);
+                                        setMessage(`Tag ${tag.name} vinculada ao lead.`);
+                                      }
+                                      setLeadTagIds(await fetchLeadTagIds(selectedLead.id));
+                                    } catch (error) {
+                                      setMessage(error instanceof Error ? error.message : "Falha ao atualizar tag do lead.");
+                                    }
+                                  }}
+                                  className={`rounded-full border px-2 py-1 text-xs font-semibold ${
+                                    selected ? "border-teal-300 bg-teal-50 text-teal-800" : "border-slate-300 bg-white text-slate-600"
+                                  }`}
+                                  style={{ borderColor: tag.color || undefined }}
+                                >
+                                  {tag.name}
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingTagId(tag.id);
+                                    setEditingTagName(tag.name);
+                                    setEditingTagColor(tag.color || "#0f766e");
+                                  }}
+                                  className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-slate-300 text-slate-700 opacity-0 transition-opacity hover:bg-slate-50 pointer-events-none group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100"
+                                  title="Editar tag"
+                                  aria-label="Editar tag"
+                                >
+                                  <EditIcon />
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={async () => {
+                                    if (!selectedLead.id) return;
+                                    try {
+                                      await deleteTag(tag.id);
+                                      setTags(await fetchTags());
+                                      setLeadTagIds(await fetchLeadTagIds(selectedLead.id));
+                                      setMessage("Tag excluída com sucesso.");
+                                    } catch (error) {
+                                      setMessage(error instanceof Error ? error.message : "Falha ao excluir tag.");
+                                    }
+                                  }}
+                                  className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-rose-300 text-rose-700 opacity-0 transition-opacity hover:bg-rose-50 pointer-events-none group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100"
+                                  title="Excluir tag"
+                                  aria-label="Excluir tag"
+                                >
+                                  <DeleteIcon />
+                                </button>
+                              </div>
+                            )}
+                          </div>
                         );
                       })}
                     </div>
@@ -383,7 +497,7 @@ function AiPageContent() {
                 </button>
                 <div className="mt-2 max-h-44 space-y-2 overflow-y-auto">
                   {tasks.map((task) => (
-                    <div key={task.id} className="rounded-lg border border-slate-200 bg-white p-2 text-xs">
+                    <div key={task.id} className="group rounded-lg border border-slate-200 bg-white p-2 text-xs">
                       <div className="flex items-start gap-2">
                         <input
                           type="checkbox"
@@ -459,7 +573,7 @@ function AiPageContent() {
                         </div>
                       </div>
                       {editingTaskId !== task.id && (
-                        <div className="mt-2 flex flex-wrap gap-2">
+                        <div className="mt-2 flex flex-wrap gap-1.5">
                           <button
                             type="button"
                             onClick={() => {
@@ -467,9 +581,11 @@ function AiPageContent() {
                               setEditingTaskTitle(task.title);
                               setEditingTaskDueAt(toDateInputValue(task.due_at));
                             }}
-                            className="rounded-lg border border-slate-300 px-2.5 py-1 text-slate-700"
+                            className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-slate-300 text-slate-700 opacity-0 transition-opacity hover:bg-slate-50 pointer-events-none group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100"
+                            title="Editar tarefa"
+                            aria-label="Editar tarefa"
                           >
-                            Editar
+                            <EditIcon />
                           </button>
                           <button
                             type="button"
@@ -483,9 +599,11 @@ function AiPageContent() {
                                 setMessage(error instanceof Error ? error.message : "Falha ao excluir tarefa.");
                               }
                             }}
-                            className="rounded-lg border border-rose-300 px-2.5 py-1 text-rose-700"
+                            className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-rose-300 text-rose-700 opacity-0 transition-opacity hover:bg-rose-50 pointer-events-none group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100"
+                            title="Excluir tarefa"
+                            aria-label="Excluir tarefa"
                           >
-                            Excluir
+                            <DeleteIcon />
                           </button>
                         </div>
                       )}
@@ -518,7 +636,7 @@ function AiPageContent() {
                 </button>
                 <div className="mt-2 max-h-56 space-y-2 overflow-y-auto">
                   {notes.map((note) => (
-                    <article key={note.id} className="rounded-lg border border-slate-200 bg-slate-50 p-2 text-xs text-slate-700">
+                    <article key={note.id} className="group rounded-lg border border-slate-200 bg-slate-50 p-2 text-xs text-slate-700">
                       {editingNoteId === note.id ? (
                         <div className="space-y-2">
                           <textarea
@@ -562,16 +680,18 @@ function AiPageContent() {
                         <>
                           <p>{note.note}</p>
                           <p className="mt-1 text-[10px] text-slate-500">{new Date(note.created_at).toLocaleString("pt-BR")}</p>
-                          <div className="mt-2 flex flex-wrap gap-2">
+                          <div className="mt-2 flex flex-wrap gap-1.5">
                             <button
                               type="button"
                               onClick={() => {
                                 setEditingNoteId(note.id);
                                 setEditingNoteText(note.note);
                               }}
-                              className="rounded-lg border border-slate-300 px-2.5 py-1 text-slate-700"
+                              className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-slate-300 text-slate-700 opacity-0 transition-opacity hover:bg-slate-50 pointer-events-none group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100"
+                              title="Editar anotação"
+                              aria-label="Editar anotação"
                             >
-                              Editar
+                              <EditIcon />
                             </button>
                             <button
                               type="button"
@@ -585,9 +705,11 @@ function AiPageContent() {
                                   setMessage(error instanceof Error ? error.message : "Falha ao excluir anotação.");
                                 }
                               }}
-                              className="rounded-lg border border-rose-300 px-2.5 py-1 text-rose-700"
+                              className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-rose-300 text-rose-700 opacity-0 transition-opacity hover:bg-rose-50 pointer-events-none group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100"
+                              title="Excluir anotação"
+                              aria-label="Excluir anotação"
                             >
-                              Excluir
+                              <DeleteIcon />
                             </button>
                           </div>
                         </>
